@@ -1,0 +1,292 @@
+---
+title: "EPID674 Epidemiologic Data Analysis using R"
+subtitle: "Exploring Data with R"
+author: "Kelly Bakulski"
+date: "Last compiled on `r format(Sys.Date(), '%B %d, %Y')`"
+output:
+   word_document: default
+   html_document: 
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE) # This is how you set options for all chunks of code
+
+sessionInfo() # check what packages are already loaded by default
+```
+
+
+## Chapter 2, Exploring Data with R
+#### Comments can be put behind the # symbol 
+#### Anything from the # to the end of the line will be ignored by R  
+
+# Identify base packages and install new packages
+```{r install packages, eval=FALSE}
+
+# Install packages. Do this only once.
+install.packages("sas7bdat")
+install.packages("epiDisplay")
+install.packages("gmodels")
+install.packages("tidyverse")
+
+# To avoid installing every time: change set up in curly brackets to eval=FALSE
+```
+
+
+```{r load packages}
+
+# Load packages. Load relevant packages every time you start a new R session
+library(sas7bdat)
+library(epiDisplay)
+library(gmodels)
+library(tidyverse)
+
+sessionInfo() # check what versions of packages you just loaded
+```
+
+# Specify file directories
+```{r directories}
+getwd() # Orient yourself to the default file path format on your computer
+
+# Three options to specify source data directory (only need to do the one that works for you)
+
+# directory<-"M:/EPID674/Data/" #Option 1: location of the parent dataset in afs space of school computer
+directory <- "/Volumes/GoogleDrive/My Drive/Teaching/EPID674/2020_fall/EPID674_Week2_Class/" # Option 2: location of data on my Macbook
+# directory<-"C:/Users/bakulski/Documents/EPID674/Data/" #Option 3: location of data on a personal PC
+
+date <- format(Sys.Date(), "%Y%m%d")
+```
+
+
+# Load data from SAS, export data for R or excel
+```{r load}
+# Check file path
+paste0(directory, "nhanes3.sas7bdat")
+
+# Load data from SAS
+nhanes <- read.sas7bdat(paste0(directory, "nhanes3.sas7bdat"))
+colnames(nhanes)
+```
+
+
+```{r save dataset}
+# Save data as an R object
+save(nhanes, file = paste0(directory, "nhanes3.rda"))
+load(paste0(directory, "nhanes3.rda")) # Try reading in the data that you just saved
+
+# Exporting data as a txt/csv file
+write.table(nhanes, file = paste0(directory, "nhanes3.txt"))
+write.csv(nhanes, file = paste0(directory, "nhanes3.csv"))
+
+# Try reading in the .csv that you just made
+nhanes.csv <- read.csv(paste0(directory, "nhanes3.csv"))
+names(nhanes.csv)
+```
+
+# Clean up your workspace
+```{r workspace}
+## list all objects and remove the ones we do not want
+ls()
+rm(x, y, z)
+# rm(list=ls())  #removes all objects
+ls()
+```
+
+# Explore the NHANES dataset
+```{r dataset explore}
+# Explore the data set
+class(nhanes) # What type of object is it?
+dim(nhanes) # What are the dimensions?
+names(nhanes) # What are the names?
+colnames(nhanes) # Whate are the column names?
+rownames(nhanes)[1:20] # What are the row names?
+
+
+head(nhanes) # What do the first 6 rows look like?
+nhanes[1:10, ] # What do the first 10 rows look like?
+```
+
+# Explore individual variables in the NHANES dataset
+```{r explore variables}
+# Explore the variables
+length(nhanes$age)
+nhanes$age[1:10]
+
+length(nhanes$educ)
+nhanes$educ[1:10]
+```
+
+# Data description functions, numeric variables
+```{r descriptives numeric variable}
+mean(x = nhanes$age, trim = 0, na.rm = FALSE)
+mean(na.rm = FALSE, x = nhanes$age, trim = 0)
+mean(nhanes$age, 0, F)
+mean(nhanes$age)
+
+median(nhanes$age)
+quantile(nhanes$age)
+quantile(nhanes$age, c(0.1, 0.9))
+sd(nhanes$age)
+IQR(nhanes$age)
+
+summary(nhanes$age)
+summary(nhanes)
+```
+
+# Create a factor variable (convert from a numeric variable)
+```{r factor variable}
+class(nhanes$sex)
+table(nhanes$sex)
+sex1 <- factor(nhanes$sex, levels = c(1, 2), labels = c("male", "female")) ## creating sex1 from sex
+class(sex1)
+is.factor(nhanes$sex)
+is.factor(sex1)
+levels(sex1)
+nhanes$sex[1:10]
+sex1[1:10]
+table(nhanes$sex)
+table(sex1)
+nhanes <- cbind(nhanes, sex1) # if the new variable passes QC, you can bind it to the parent dataset
+
+### opposite way is as.numeric()
+sex2 <- as.numeric(sex1)
+sex2[1:10]
+table(sex2)
+```
+
+# Calculate descriptive statistics on a categorical variable
+```{r categorical variable descriptives}
+table(nhanes$race)
+tab1(nhanes$sex1)
+table(nhanes$sex1, nhanes$race)
+CrossTable(nhanes$sex1, nhanes$race)
+```
+
+# Do Exercise 2A
+
+# Take a random sample of the dataset
+```{r random sample}
+## sample() to randomly sample
+samp <- sample(nhanes$seqn, 100)
+samp[1:20]
+samp1 <- sample(nhanes$seqn, 100, replace = T)
+samp1[1:20]
+```
+
+# Create a subset of the dataset
+```{r subset}
+# subset(): You can create a subset from a data frame using the subset() function.
+# For example, create a dataset for race==1 (White).
+table(nhanes$race)
+nhanes.white <- subset(nhanes, nhanes$race == 1)
+dim(nhanes.white)
+
+# To select only the 'age', 'bmi', and 'sex' variables among Black people
+nhanes.black <- subset(nhanes, nhanes$race == 2, select = c(age, bmi, sex))
+dim(nhanes.black)
+
+# Use indexing []
+nhanes.young <- nhanes[nhanes$age < 30, ]
+dim(nhanes.young)
+```
+
+# Calculate descriptives on a subset of the dataset
+```{r descriptive statistics on a subset} 
+summary(nhanes[, 1:5])
+summary(nhanes[, c(1, 6, 11, 16, 21)])
+summary(nhanes[, c("age", "sex", "race", "bpb", "sbp")])
+summary(nhanes[, -c(1:30)])
+
+# Index within objects with [], create subsets, and you can run any R commands for subsets.
+mean(nhanes.white$age)
+sd(nhanes.black$age)
+
+table(nhanes$race, nhanes$sex)
+femalewhite <- nhanes[nhanes$sex == 2 & nhanes$race == 1, ]
+nrow(femalewhite)
+summary(femalewhite$age)
+```
+
+
+# Create a categorical variable from a numeric variable
+```{r create categorical variables}
+## create a categorical variable
+AGE5a <- cut(nhanes$age, 5) # five equally space intervals (14 yrs)
+summary(AGE5a)
+AGE5b <- cut(nhanes$age, quantile(nhanes$age, c(0, .2, .4, .6, .8, 1)), include.lowest = T) # quintiles
+summary(AGE5b)
+AGE5c <- cut(nhanes$age, breaks = c(19, 40, 50, 60, 70, 90))
+summary(AGE5c)
+
+
+# ifelse
+AGE5d <- ifelse(nhanes$age < 30, 1, nhanes$age)
+AGE5d <- ifelse(nhanes$age >= 30 & nhanes$age < 40, 2, AGE5d)
+AGE5d <- ifelse(nhanes$age >= 40 & nhanes$age < 50, 3, AGE5d)
+AGE5d <- ifelse(nhanes$age >= 50 & nhanes$age < 60, 4, AGE5d)
+AGE5d <- ifelse(nhanes$age >= 60, 5, AGE5d)
+tab1(AGE5d)
+
+# Tidyverse: another way
+nhanes <- nhanes %>%
+  mutate(AGE5e = case_when(
+    age < 30 ~ 1,
+    age >= 30 & age < 40 ~ 2,
+    age >= 40 & age < 50 ~ 3,
+    age >= 50 & age < 60 ~ 4,
+    age >= 60 ~ 5,
+  ))
+summary(nhanes$AGE5e)
+
+# Long form: another way
+agecat <- nhanes$age
+agecat[nhanes$age < 30] <- "Twenties"
+agecat[nhanes$age >= 30 & nhanes$age < 40] <- "Thirties"
+agecat[nhanes$age >= 40 & nhanes$age < 50] <- "Fourties"
+agecat[nhanes$age >= 50 & nhanes$age < 60] <- "Fifties"
+agecat[nhanes$age >= 60 & nhanes$age < 70] <- "Sixties"
+agecat[nhanes$age >= 70 & nhanes$age < 80] <- "Seventies"
+agecat[nhanes$age >= 80] <- "Eighties"
+table(agecat)
+
+
+age5c <- unclass(AGE5c) ## convert back into numeric
+summary(age5c)
+class(AGE5c)
+class(age5c)
+nhanes <- cbind(nhanes, AGE5b, AGE5c, age5c)
+```
+
+
+# Use the ifelse() function to create a categorical variable
+```{r}
+# ifelse
+length(nhanes$bmi[nhanes$bmi >= 30])
+nhanes$obesity <- ifelse(nhanes$bmi >= 30, 1, 0)
+tab1(nhanes$obesity)
+
+nrow(nhanes[nhanes$htn == 1 & nhanes$bmi >= 30, ])
+nhanes$htnob <- ifelse(nhanes$htn == 1 & nhanes$bmi >= 30, 1, 0)
+tab1(nhanes$htnob)
+```
+
+
+# Do Exercise 2B
+
+# Remember to save your R script!
+```{r save modified dataset}
+# optional, save the nhanes object you modified.
+save(nhanes, file = paste0(directory, "nhanes3", date, ".rda"))
+## or you can save the workspace (includes all objects) with the name of your file
+# save.image(file="epid674.RData")
+```
+
+
+# To exit R 
+```{r exit}
+# q()
+## if you close R, you will be asked to save your workspace image
+```
+
+
