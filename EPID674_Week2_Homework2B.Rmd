@@ -1,0 +1,40 @@
+---
+title: "EPID674 Epidemiologic Data Analysis using R"
+subtitle: "Homework 2B"
+author: "Insert Your Name Here"
+date: "Last compiled on `r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Please submit your R code and your answers. 
+
+Using the bpa dataset, do the following problems.
+
+## 1. Compute the mean, standard deviation, minimum, 25th percentile, median, 75th percentile, and maximum of age, separately by gender.
+```{r problem 1}
+# Insert your code for problem 1 here
+```
+#Interpret your answer for problem 1 here
+
+
+
+## 2.  Compute the mean, standard deviation, minimum, 25th percentile, median, 75th percentile, and maximum of BMI, separately by gender.
+```{r problem 2}
+# Insert your code for problem 2 here
+```
+#Interpret your answer for problem 2 here
+
+
+## 3.  Complete the table on Canvas.  		
+```{r problem 3}
+# Insert your code for problem 3 here
+```
+#Interpret your answer for problem 3 here
+
+
+ *PROBLEM 3 NOTE: For continuous variables, provide the mean and standard deviation for that BMI category. This is what is meant by the notation mean(SD). For categorical variables, provide the count and percent (pick row or column) for that BMI category. This is what is meant by the notation N(%).
