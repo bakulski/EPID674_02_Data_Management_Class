@@ -49,11 +49,13 @@ sessionInfo() # check what versions of packages you just loaded
 ```{r directories}
 getwd() # Orient yourself to the default file path format on your computer
 
-# Three options to specify source data directory (only need to do the one that works for you)
 
-# directory<-"M:/EPID674/Data/" #Option 1: location of the parent dataset in afs space of school computer
-directory <- "/Volumes/GoogleDrive/My Drive/Teaching/EPID674/2020_fall/EPID674_Week2_Class/" # Option 2: location of data on my Macbook
-# directory<-"C:/Users/bakulski/Documents/EPID674/Data/" #Option 3: location of data on a personal PC
+directory <- "/cloud/projects/" #Class option when coding on RStudio Cloud
+
+# Three alternate options to customize and specify source data directory if programming on a personal computer (only need to do the one that works for you)
+# directory<-"M:/EPID674/Data/" # Alternate option 1: location of the parent dataset in afs space of school computer
+# directory <- "/Volumes/GoogleDrive/My Drive/Teaching/EPID674/2020_fall/EPID674_Week2_Class/" # Alternate option 2: location of data on my Macbook
+# directory<-"C:/Users/bakulski/Documents/EPID674/Data/" #Alternate option 3: location of data on a personal PC
 
 date <- format(Sys.Date(), "%Y%m%d")
 ```
