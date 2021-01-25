@@ -1980,12 +1980,12 @@ sex2[1:10]</code></pre>
 <pre class="r"><code>## sample() to randomly sample
 samp &lt;- sample(nhanes$seqn, 100)
 samp[1:20]</code></pre>
-<pre><code>##  [1] 35792 45632 43937 15065 46707 41471  4036  9347 19643  1479 10408  8073
-## [13] 17177 38836  1847 53081 49624 36894 38201 10816</code></pre>
+<pre><code>##  [1] 39864 32937 16240 45100 19874 41912 41665 20992 21271 46533 21812 42600
+## [13] 45711  1636 35885 43110  3415  1927 16264  8593</code></pre>
 <pre class="r"><code>samp1 &lt;- sample(nhanes$seqn, 100, replace = T)
 samp1[1:20]</code></pre>
-<pre><code>##  [1] 13789 18410 19927  8476 43544 20312 34196 43232 13654 53538 32875  3494
-## [13]  4667 19447 15964 47830 33428  2592 17608  6262</code></pre>
+<pre><code>##  [1]   665   738  5535  4521 35428   988 39646 11960 17697 50463  7607 42240
+## [13] 46755 44638  3281  6056  8495  3092  5252 40240</code></pre>
 </div>
 <div id="create-a-subset-of-the-dataset" class="section level1">
 <h1>Create a subset of the dataset</h1>
@@ -2049,23 +2049,6 @@ dim(nhanes.young)</code></pre>
 ##  Mean   :126.3  
 ##  3rd Qu.:137.0  
 ##  Max.   :237.0</code></pre>
-<pre class="r"><code>summary(nhanes[, -c(1:30)])</code></pre>
-<pre><code>##      med_ht            htn            d_total          pmon_int    
-##  Min.   :0.0000   Min.   :0.0000   Min.   :0.0000   Min.   :  1.0  
-##  1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:151.0  
-##  Median :0.0000   Median :0.0000   Median :0.0000   Median :171.0  
-##  Mean   :0.1674   Mean   :0.3821   Mean   :0.2515   Mean   :159.6  
-##  3rd Qu.:0.0000   3rd Qu.:1.0000   3rd Qu.:1.0000   3rd Qu.:194.0  
-##  Max.   :1.0000   Max.   :1.0000   Max.   :1.0000   Max.   :218.0  
-##  NA&#39;s   :45                        NA&#39;s   :5        NA&#39;s   :5      
-##     pmon_mec        d_cancer           d_cvd            sex1     
-##  Min.   :  0.0   Min.   :0.00000   Min.   :0.0000   male  :2335  
-##  1st Qu.:149.0   1st Qu.:0.00000   1st Qu.:0.0000   female:2739  
-##  Median :170.0   Median :0.00000   Median :0.0000                
-##  Mean   :158.7   Mean   :0.05031   Mean   :0.1136                
-##  3rd Qu.:193.0   3rd Qu.:0.00000   3rd Qu.:0.0000                
-##  Max.   :217.0   Max.   :1.00000   Max.   :1.0000                
-##  NA&#39;s   :5       NA&#39;s   :5         NA&#39;s   :5</code></pre>
 <pre class="r"><code># Index within objects with [], create subsets, and you can run any R commands for subsets.
 mean(nhanes.white$age)</code></pre>
 <pre><code>## [1] 50.57457</code></pre>
@@ -2132,7 +2115,7 @@ summary(AGE5c)</code></pre>
 <h1>Use the tidyverse to categorize a numeric variable</h1>
 <pre class="r"><code># Tidyverse: another way
 nhanes &lt;- nhanes %&gt;% # This is the pipe symbol
-  mutate(AGE5d = case_when(
+  mutate(AGE5d = case_when(  # Use the mutate function to add a new variable
     age &lt; 30 ~ 1,
     age &gt;= 30 &amp; age &lt; 40 ~ 2,
     age &gt;= 40 &amp; age &lt; 50 ~ 3,
@@ -2143,9 +2126,9 @@ summary(nhanes$AGE5d)</code></pre>
 <pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 ##   1.000   2.000   3.000   3.191   5.000   5.000</code></pre>
 </div>
-<div id="categorize-a-numeric-variable-the-long-way" class="section level1">
-<h1>Categorize a numeric variable the long way</h1>
-<pre class="r"><code># Long form: another way
+<div id="categorize-a-numeric-variable-the-long-way-with-indexing" class="section level1">
+<h1>Categorize a numeric variable the long way with indexing</h1>
+<pre class="r"><code># Long form: another way using brackets to index
 agecat &lt;- nhanes$age
 agecat[nhanes$age &lt; 30] &lt;- &quot;Twenties&quot;
 agecat[nhanes$age &gt;= 30 &amp; nhanes$age &lt; 40] &lt;- &quot;Thirties&quot;

@@ -196,7 +196,6 @@ dim(nhanes.young)
 summary(nhanes[, 1:5])
 summary(nhanes[, c(1, 6, 11, 16, 21)])
 summary(nhanes[, c("age", "sex", "race", "bpb", "sbp")])
-summary(nhanes[, -c(1:30)])
 
 # Index within objects with [], create subsets, and you can run any R commands for subsets.
 mean(nhanes.white$age)
@@ -233,10 +232,10 @@ summary(AGE5c)
 ```
 
 # Use the tidyverse to categorize a numeric variable
-```{r mutate}
+```{r pipe_and_mutate}
 # Tidyverse: another way
 nhanes <- nhanes %>% # This is the pipe symbol
-  mutate(AGE5d = case_when(
+  mutate(AGE5d = case_when(  # Use the mutate function to add a new variable
     age < 30 ~ 1,
     age >= 30 & age < 40 ~ 2,
     age >= 40 & age < 50 ~ 3,
@@ -246,9 +245,9 @@ nhanes <- nhanes %>% # This is the pipe symbol
 summary(nhanes$AGE5d)
 ```
 
-# Categorize a numeric variable the long way
+# Categorize a numeric variable the long way with indexing
 ```{r longform_categorization}
-# Long form: another way
+# Long form: another way using brackets to index
 agecat <- nhanes$age
 agecat[nhanes$age < 30] <- "Twenties"
 agecat[nhanes$age >= 30 & nhanes$age < 40] <- "Thirties"
@@ -270,10 +269,6 @@ class(age5c)
 # Bind the variables that are useful to the nhanes dataframe for use later
 nhanes <- cbind(nhanes, AGE5b, AGE5c, age5c)
 ```
-
-
-
-
 
 # Do Exercise 2B
 
