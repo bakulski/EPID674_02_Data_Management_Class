@@ -193,9 +193,6 @@ dim(nhanes.young)
 
 # Calculate descriptives on a subset of the dataset
 ```{r descriptive_statistics_subset} 
-summary(nhanes[, 1:5])
-summary(nhanes[, c(1, 6, 11, 16, 21)])
-summary(nhanes[, c("age", "sex", "race", "bpb", "sbp")])
 
 # Index within objects with [], create subsets, and you can run any R commands for subsets.
 mean(nhanes.white$age)
@@ -210,7 +207,7 @@ summary(femalewhite$age)
 # Use the ifelse() function to create a categorical variable 
 ```{r ifelse}
 # ifelse
-length(nhanes$bmi[nhanes$bmi >= 30])
+length(nhanes$bmi[nhanes$bmi < 30])
 nhanes$obesity <- ifelse(nhanes$bmi >= 30, 1, 0)
 tab1(nhanes$obesity)
 
@@ -276,8 +273,7 @@ nhanes <- cbind(nhanes, AGE5b, AGE5c, age5c)
 ```{r save_modified_dataset}
 # Optional, save the nhanes object you modified
 save(nhanes, file = file.path(directory, "nhanes3.rda"))
-# Or you can save the workspace (includes all objects) with the name of your file
-# save.image(file="epid674.RData")
+
 ```
 
 
