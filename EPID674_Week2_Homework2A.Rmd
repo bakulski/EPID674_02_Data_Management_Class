@@ -32,11 +32,11 @@ Using this dataset, do the following problems.
 ```
 #Interpret your answer for problem 1B here
 
-## 1C.  C. Save the bpa dataset as an R data file (.rda). In future homework assignments, you can load the .rda file directly and will not need to use the .sas7bdat file again.
+## 1C.  C. Save the bpa dataset as an R data file (.rda). In future homework assignments, you can load the .rda file directly and will not need to use the .sas7bdat file again.
 ```{r problem 1C}
 # Insert your code for problem 1C here
 ```
-#Interpret your answer for problem 1C here
+
 
 Problem 2. Explore the bpa dataset.
 

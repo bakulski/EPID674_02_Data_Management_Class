@@ -15,85 +15,73 @@ knitr::opts_chunk$set(echo = TRUE) # This is how you set options for all chunks 
 sessionInfo() # check what packages are already loaded by default
 ```
 
-
 ## Chapter 2, Exploring Data with R
 
 # Identify base packages and install new packages
+
 ```{r install_packages, eval=FALSE}
 
 # Install packages. Do this only once.
 # Note, we already installed packages to this workspace. If working on your personal computer, will need to run this code
-install.packages("sas7bdat")
+install.packages("haven")
 install.packages("epiDisplay")
 install.packages("gmodels")
 install.packages("tidyverse")
+install.packages("here")
 
 # To avoid installing every time: change set up in curly brackets to eval=FALSE
 ```
 
-
 ```{r load_packages}
 
 # Load packages. Load relevant packages every time you start a new R session
-library(sas7bdat)
+library(haven)
 library(epiDisplay)
 library(gmodels)
 library(tidyverse)
+library(here)
 
 sessionInfo() # check what versions of packages you just loaded
 ```
 
 # Specify file directories
+
 ```{r directories}
-getwd() # Orient yourself to the default file path format on your computer
+here() # Orient yourself to the default file path format on your computer
 
-
-directory <- "/cloud/project" #Class option when coding on RStudio Cloud
-
-# Three alternate options to customize and specify source data directory if programming on a personal computer (only need to do the one that works for you)
-# directory<-"M:/EPID674/Data" # Alternate option 1: location of the parent dataset in afs space of school computer
-# directory <- "/Volumes/GoogleDrive/My Drive/Teaching/EPID674/2020_fall/EPID674_Week2_Class" # Alternate option 2: location of data on my Macbook
-# directory<-"C:/Users/bakulski/Documents/EPID674/Data" #Alternate option 3: location of data on a personal PC
+#Expect to be when coding on RStudio Cloud
+#"/cloud/project" 
 
 date <- format(Sys.Date(), "%Y%m%d")
 ```
 
-
 # Load data from SAS, export data for R or excel
+
 ```{r load}
 # Check file path
-file.path(directory, "nhanes3.sas7bdat")
+here("nhanes3.sas7bdat")
 
 # Load data from SAS
-nhanes <- read.sas7bdat(file.path(directory, "nhanes3.sas7bdat"))
+nhanes <- read_sas(here("nhanes3.sas7bdat"))
 colnames(nhanes)
 ```
 
-
 ```{r save_dataset}
 # Save data as an R object
-save(nhanes, file = file.path(directory, "nhanes3.rda"))
-load(file.path(directory, "nhanes3.rda")) # Try reading in the data that you just saved
+save(nhanes, file = here("nhanes3.rda"))
+load(here("nhanes3.rda")) # Try reading in the data that you just saved
 
 # Exporting data as a txt/csv file
-write.table(nhanes, file = file.path(directory, "nhanes3.txt"))
-write.csv(nhanes, file = file.path(directory, "nhanes3.csv"))
+write.table(nhanes, file = here("nhanes3.txt"))
+write.csv(nhanes, file = here("nhanes3.csv"))
 
 # Try reading in the .csv that you just made
-nhanes.csv <- read.csv(file.path(directory, "nhanes3.csv"))
+nhanes.csv <- read.csv(here("nhanes3.csv"))
 names(nhanes.csv)
 ```
 
-# Clean up your workspace
-```{r workspace}
-## list all objects and remove the ones we do not want
-ls()
-rm(x, y, z)
-# rm(list=ls())  #removes all objects
-ls()
-```
-
 # Explore the NHANES dataset
+
 ```{r dataset_explore}
 # Explore the data set
 class(nhanes) # What type of object is it?
@@ -108,6 +96,7 @@ nhanes[1:10, ] # What do the first 10 rows look like?
 ```
 
 # Explore individual variables in the NHANES dataset
+
 ```{r explore_variables}
 # Explore the variables
 length(nhanes$age)
@@ -118,6 +107,7 @@ nhanes$educ[1:10]
 ```
 
 # Data description functions, numeric variables
+
 ```{r descriptives_numeric_variable}
 mean(x = nhanes$age, trim = 0, na.rm = FALSE)
 mean(na.rm = FALSE, x = nhanes$age, trim = 0)
@@ -135,6 +125,7 @@ summary(nhanes)
 ```
 
 # Create a factor variable (convert from a numeric variable)
+
 ```{r factor_variable}
 class(nhanes$sex)
 table(nhanes$sex)
@@ -156,6 +147,7 @@ table(sex2)
 ```
 
 # Calculate descriptive statistics on a categorical variable
+
 ```{r categorical_variable_descriptives}
 table(nhanes$race)
 tab1(nhanes$sex1)
@@ -166,6 +158,7 @@ CrossTable(nhanes$sex1, nhanes$race)
 # Do Exercise 2A
 
 # Take a random sample of the dataset
+
 ```{r random_sample}
 ## sample() to randomly sample
 samp <- sample(nhanes$seqn, 100)
@@ -175,6 +168,7 @@ samp1[1:20]
 ```
 
 # Create a subset of the dataset
+
 ```{r subset}
 # subset(): You can create a subset from a data frame using the subset() function.
 # For example, create a dataset for race==1 (White).
@@ -192,7 +186,8 @@ dim(nhanes.young)
 ```
 
 # Calculate descriptives on a subset of the dataset
-```{r descriptive_statistics_subset} 
+
+```{r descriptive_statistics_subset}
 
 # Index within objects with [], create subsets, and you can run any R commands for subsets.
 mean(nhanes.white$age)
@@ -204,7 +199,8 @@ nrow(femalewhite)
 summary(femalewhite$age)
 ```
 
-# Use the ifelse() function to create a categorical variable 
+# Use the ifelse() function to create a categorical variable
+
 ```{r ifelse}
 # ifelse
 length(nhanes$bmi[nhanes$bmi < 30])
@@ -217,7 +213,9 @@ tab1(nhanes$htnob)
 ```
 
 # Create a categorical variable from a numeric variable
+
 # Use the cut function to slice a numeric variable into groups
+
 ```{r cut}
 ## create a categorical variable
 AGE5a <- cut(nhanes$age, 5) # Five equally spaced intervals (14 yrs)
@@ -229,9 +227,10 @@ summary(AGE5c)
 ```
 
 # Use the tidyverse to categorize a numeric variable
+
 ```{r pipe_and_mutate}
 # Tidyverse: another way
-nhanes <- nhanes %>% # This is the pipe symbol
+nhanes <- nhanes %>% # This is the pipe operator
   mutate(AGE5d = case_when(  # Use the mutate function to add a new variable
     age < 30 ~ 1,
     age >= 30 & age < 40 ~ 2,
@@ -243,6 +242,7 @@ summary(nhanes$AGE5d)
 ```
 
 # Categorize a numeric variable the long way with indexing
+
 ```{r longform_categorization}
 # Long form: another way using brackets to index
 agecat <- nhanes$age
@@ -256,31 +256,22 @@ agecat[nhanes$age >= 80] <- "Eighties"
 table(agecat)
 ```
 
-# Convert categorical variables to numeric
-```{r convert_numeric}
-age5c <- unclass(AGE5c) # Convert back into numeric
-summary(age5c)
-class(AGE5c)
-class(age5c)
-
-# Bind the variables that are useful to the nhanes dataframe for use later
-nhanes <- cbind(nhanes, AGE5b, AGE5c, age5c)
-```
-
 # Do Exercise 2B
 
 # Remember to save your R script!
+
 ```{r save_modified_dataset}
-# Optional, save the nhanes object you modified
-save(nhanes, file = file.path(directory, "nhanes3.rda"))
+# Bind the variables that are useful to the nhanes data frame for use later
+nhanes <- cbind(nhanes, AGE5b, AGE5c)
+
+# Save the nhanes object you modified
+save(nhanes, file = here("nhanes3.rda"))
 
 ```
 
+# To exit R
 
-# To exit R 
 ```{r exit, eval=F}
 # q()
 ## if you close R, you will be asked to save your workspace image
 ```
-
-
