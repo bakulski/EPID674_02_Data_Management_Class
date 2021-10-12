@@ -23,11 +23,12 @@ sessionInfo() # check what packages are already loaded by default
 
 # Install packages. Do this only once.
 # Note, we already installed packages to this workspace. If working on your personal computer, will need to run this code
-install.packages("haven")
-install.packages("epiDisplay")
-install.packages("gmodels")
 install.packages("tidyverse")
 install.packages("here")
+install.packages("nhanesA")
+install.packages("sjlabelled")
+install.packages("gtsummary")
+install.packages("flextable")
 
 # To avoid installing every time: change set up in curly brackets to eval=FALSE
 ```
@@ -35,13 +36,12 @@ install.packages("here")
 ```{r load_packages}
 
 # Load packages. Load relevant packages every time you start a new R session
-library(haven)
-library(epiDisplay)
-library(gmodels)
 library(tidyverse)
 library(here)
-
-sessionInfo() # check what versions of packages you just loaded
+library(nhanesA)
+library(sjlabelled)
+library(gtsummary)
+library(flextable)
 ```
 
 # Specify file directories
@@ -51,223 +51,370 @@ here() # Orient yourself to the default file path format on your computer
 
 #Expect to be when coding on RStudio Cloud
 #"/cloud/project" 
-
-date <- format(Sys.Date(), "%Y%m%d")
 ```
 
-# Load data from SAS, export data for R or excel
+# Data Cleaning Plan
 
+```{r}
+
+# 1) Download demographics, complete blood counts, and chemical data
+# 2) Check datasets
+# 3) Keep only the useful variables
+# 4) Merge datasets
+# 5) Remove missing data
+# 6) Fix data types
+```
+
+# Import Datasets from 2017-2018 NHANES
+* Datasets can be found at: **https://wwwn.cdc.gov/nchs/nhanes/continuousnhanes/default.aspx?BeginYear=2017**
+* Data are saved in multiple datasets that we will need to combine
+* NHANES variables have labels as well as variable names - those labels need to be removed for merging
 ```{r load}
-# Check file path
-here("nhanes3.sas7bdat")
 
-# Load data from SAS
-nhanes <- read_sas(here("nhanes3.sas7bdat"))
-colnames(nhanes)
-```
+# Download NHANES demographics data and remove the labels
+demog <- nhanes("DEMO_J")
+demog_unlab <- remove_label(demog)
+# Check the column names (variable names)
+colnames(demog_unlab)
 
-```{r save_dataset}
-# Save data as an R object
-save(nhanes, file = here("nhanes3.rda"))
-load(here("nhanes3.rda")) # Try reading in the data that you just saved
+# Check the Demographics Data website for information about these variables:
+# https://wwwn.cdc.gov/nchs/nhanes/search/datapage.aspx?Component=Demographics&CycleBeginYear=2017
+#   What does RIAGENDR mean?
 
-# Exporting data as a txt/csv file
-write.table(nhanes, file = here("nhanes3.txt"))
-write.csv(nhanes, file = here("nhanes3.csv"))
+# Download Complete Blood Cell Laboratory Data, remove the labels, check the column names
+cbc <- nhanes("CBC_J")
+cbc_unlab <- remove_label(cbc)
+colnames(cbc_unlab)
 
-# Try reading in the .csv that you just made
-nhanes.csv <- read.csv(here("nhanes3.csv"))
-names(nhanes.csv)
+# Download Iron Data, remove labels, check column names
+fe <- nhanes("FETIB_J")
+fe_unlab <- remove_label(fe)
+colnames(fe_unlab)
+
+# Download Arsenic Data, remove labels, check column names
+as <- nhanes("UTAS_J")
+as_unlab <- remove_label(as)
+colnames(as_unlab)
+
+# What variable is the same between the three datasets?
 ```
 
 # Explore the NHANES dataset
 
 ```{r dataset_explore}
+
 # Explore the data set
-class(nhanes) # What type of object is it?
-dim(nhanes) # What are the dimensions?
-names(nhanes) # What are the names?
-colnames(nhanes) # Whate are the column names?
-rownames(nhanes)[1:20] # What are the row names?
+str(demog_unlab) # Get detailed information about each variable and the object overall
+dim(demog_unlab) # What are the dimensions?
+colnames(demog_unlab) # Whate are the column names?
+rownames(demog_unlab)[1:20] # What are the row names?
 
 
-head(nhanes) # What do the first 6 rows look like?
-nhanes[1:10, ] # What do the first 10 rows look like?
+head(demog_unlab) # What do the first 6 rows look like?
+demog_unlab[1:10, ] # What do the first 10 rows look like?
 ```
 
 # Explore individual variables in the NHANES dataset
 
 ```{r explore_variables}
 # Explore the variables
-length(nhanes$age)
-nhanes$age[1:10]
+length(demog_unlab$RIDAGEYR)
+demog_unlab$RIDAGEYR[1:10]
 
-length(nhanes$educ)
-nhanes$educ[1:10]
+# Are there any duplicates?
+
+# Look at the whole dataset
+View(demog_unlab)
 ```
+# Subset datasets to keep only useful variables
+
+```{r select()}
+
+# select() is a useful tidyverse function that keeps columns in a dataframe
+# We only want to keep the necessary variables to avoid creating a huge dataset
+
+############ Demographics dataset ############
+dim(demog_unlab)
+#9254   46
+demog_subset <- demog_unlab %>%
+  select(SEQN,     #participant identifier
+         RIAGENDR, #sex
+         RIDAGEYR, #age in years
+         RIDRETH1, #race in number code
+         INDFMPIR, #poverty-income ratio
+         #these two are for later (survey weighting)
+         SDMVSTRA, #Strata: based on census region, metropolitan area, or population demographics
+         SDMVPSU   #Primary Sampling Unit: 30 per nhanes cycle - mostly single counties, selected from strata
+         ) %>%
+  rename(RIASEX = RIAGENDR) #rename RIAGENDR to be RIASEX because NHANES asked about sex, not gender
+dim(demog_subset)
+#9254    7 - number of rows does not change
+
+############ Complete blood count dataset ############
+dim(cbc_unlab)
+#8366   22
+cbc_subset <- cbc_unlab %>%
+  select(SEQN,
+         LBXRBCSI)
+dim(cbc_subset)
+#8366    2
+
+############ Iron dataset ############
+dim(fe_unlab)
+#6401    9
+fe_subset <- fe_unlab %>%
+  select(SEQN,
+         LBXIRN)
+dim(fe_subset)
+#6401    2
+
+############ Arsenic dataset ############
+dim(as_unlab)
+#2979    4
+as_subset <- as_unlab %>%
+  select(SEQN,
+         URXUAS)
+dim(as_subset)
+#2979    2
+```
+
+# Merge four datasets into one
+
+```{r data_merge}
+
+# Merge the demographics and complete blood count datasets
+demog_cbc <- left_join(demog_subset, cbc_subset, by = "SEQN")
+# Check the merge - How many participants and variables do you expect?
+str(demog_cbc)
+
+# Merge the previous dataset and iron dataset
+demog_cbc_fe <- left_join(demog_cbc, fe_subset, by = "SEQN")
+# Check the merge - How many participants and variables do you expect?
+str(demog_cbc_fe)
+
+# Merge the previous dataset and arsenic dataset
+demog_cbc_chems <- left_join(demog_cbc_fe, as_subset, by = "SEQN")
+# Check the merge - How many participants and variables do you expect?
+str(demog_cbc_chems)
+```
+
+# Convert number codes to words
+
+```{r}
+
+# check the initial counts of race/ethnicity and sex
+table(demog_cbc_chems$RIDRETH1)
+table(demog_cbc_chems$RIASEX)
+
+# update race/ethnicity and sex from numbers to words
+nhanes_char <- demog_cbc_chems %>%
+  mutate(race_eth = case_when(RIDRETH1 == 1 ~ "Mexican American",
+                              RIDRETH1 == 2 ~ "Other Hispanic",
+                              RIDRETH1 == 3 ~ "Non-Hispanic White",
+                              RIDRETH1 == 4 ~ "Non-Hispanic Black",
+                              RIDRETH1 == 5 ~ "Other Race"),
+         sex = case_when(RIASEX == 1 ~ "Male",
+                         RIASEX == 2 ~ "Female")) %>%
+  select(-RIDRETH1,
+         -RIASEX) %>%                 #drop the old variables
+  relocate(race_eth, .after = RIDAGEYR) %>% #reorder the columns because the table uses them in order
+  relocate(sex, .after = race_eth)
+  
+  
+table(nhanes_char$race_eth)
+table(nhanes_char$sex)
+# Do the counts still match?
+```
+
+# Set the data types
+
+```{r data_types}
+
+# Check the data types
+str(nhanes_char)
+
+# Sex and Race are currently set as integers - make them factors and set the reference level
+nhanes_factor <- nhanes_char %>%
+  mutate(sex = factor(sex),
+         race_eth = factor(race_eth)) %>%
+  mutate(sex = relevel(sex,
+                       ref = "Male"),
+         race_eth = relevel(race_eth,
+                            ref = "Non-Hispanic White"))
+
+# Check the data types again
+str(nhanes_factor)
+```
+
+# Create a categorical variable from a continuous
+
+```{r categorical}
+
+# Create a categorical variable of iron status based on serum concentrations
+nhanes_dataset <- nhanes_factor %>%
+  mutate(iron_status = case_when(LBXIRN < 60 ~ "Deficient",
+                                 LBXIRN > 170 ~ "Excessive",
+                                 LBXIRN >= 60 & LBXIRN <= 170 ~ "Normal")) %>%
+  relocate(iron_status, .after = LBXIRN)
+```
+
+# Save dataset for the future
+
+```{r save_dataset}
+
+# Save dataset as a csv file
+write.csv(nhanes_dataset, file = here("nhanes_dataset.csv"),
+          row.names=FALSE)
+# Save dataset as an R object
+save(nhanes_dataset, file = here("nhanes_dataset.rda"))
+
+# Import dataset back into R from the csv or R object
+nhanes_dataset <- read.csv(here(("nhanes_dataset.csv")))
+nhanes_dataset <- load(here(("nhanes_dataset.rda")))
+```
+
+
 
 # Data description functions, numeric variables
 
 ```{r descriptives_numeric_variable}
-mean(x = nhanes$age, trim = 0, na.rm = FALSE)
-mean(na.rm = FALSE, x = nhanes$age, trim = 0)
-mean(nhanes$age, 0, F)
-mean(nhanes$age)
 
-median(nhanes$age)
-quantile(nhanes$age)
-quantile(nhanes$age, c(0.1, 0.9))
-sd(nhanes$age)
-IQR(nhanes$age)
+# Base R method - quick, good for one variable at a time
+summary(nhanes_dataset$RIDAGEYR)
+# For missing values, include na.rm = TRUE:
+sd(nhanes_dataset$LBXIRN, na.rm = TRUE)
 
-summary(nhanes$age)
-summary(nhanes)
-```
+# Tidyverse method - more code, but can be used to get summary statistics on multiple variables
+nhanes_dataset %>%
+  summarise(age_min = min(RIDAGEYR),
+            age_25_quart = quantile(RIDAGEYR, probs = 0.25),
+            age_mean = mean(RIDAGEYR),
+            age_median = median(RIDAGEYR),
+            age_75_quart = quantile(RIDAGEYR, probs = 0.75),
+            age_iqr = IQR(RIDAGEYR),
+            age_max = max(RIDAGEYR))
 
-# Create a factor variable (convert from a numeric variable)
-
-```{r factor_variable}
-class(nhanes$sex)
-table(nhanes$sex)
-sex1 <- factor(nhanes$sex, levels = c(1, 2), labels = c("male", "female")) ## creating sex1 from sex
-class(sex1)
-is.factor(nhanes$sex)
-is.factor(sex1)
-levels(sex1)
-nhanes$sex[1:10]
-sex1[1:10]
-table(nhanes$sex)
-table(sex1)
-nhanes <- cbind(nhanes, sex1) # if the new variable passes QC, you can bind it to the parent dataset
-
-### opposite way is as.numeric()
-sex2 <- as.numeric(sex1)
-sex2[1:10]
-table(sex2)
+# Calculating statistics by groups - tidyverse
+# Note: good practice to add ungroup() after using it to avoid the dataset staying grouped
+nhanes_dataset %>%
+  group_by(sex) %>%
+  summarise(age_mean = mean(RIDAGEYR),
+            pir_mean = mean(INDFMPIR, na.rm = TRUE)) %>%
+  ungroup()
 ```
 
 # Calculate descriptive statistics on a categorical variable
 
 ```{r categorical_variable_descriptives}
-table(nhanes$race)
-tab1(nhanes$sex1)
-table(nhanes$sex1, nhanes$race)
-CrossTable(nhanes$sex1, nhanes$race)
+
+# Base R method
+table(nhanes_dataset$race_eth)
+table(nhanes_dataset$race_eth, nhanes_dataset$sex)
 ```
+
+# Create a publication-formatted table
+
+```{r}
+# gtsummary package method
+nhanes_dataset %>%
+  select(-SEQN,
+         -SDMVSTRA,
+         -SDMVPSU) %>% #drop SEQN and survey variables so we don't get summary statistics for the identifiers or weights
+  tbl_summary()
+
+
+# stratified analysis by sex using gtsummary
+# To view the table in RMarkdown, comment out the last pipe and save_as_docx() function
+nhanes_dataset %>%
+  select(-SEQN,
+         -SDMVSTRA,
+         -SDMVPSU) %>%
+  tbl_summary(by = sex, #stratify by sex
+              label = list(RIDAGEYR    ~ "Age (years)", #update the variable names
+                           race_eth    ~ "Race/Ethnicity",
+                           INDFMPIR    ~ "Poverty-Income Ratio",
+                           LBXRBCSI    ~ "Red Blood Cell Count (million cells/uL)",
+                           LBXIRN      ~ "Iron (ug/dL)",
+                           iron_status ~ "Iron Status",
+                           URXUAS      ~ "Urinary Arsenic (ug/L)"),
+              statistic = list(all_continuous() ~ "{mean} ({sd})", #use mean and standard deviation for continuous variables
+                               all_categorical() ~ "{n} ({p}%)"),  #use count and percentage for categorical variables
+              digits = list(all_categorical() ~ c(0, 1), #adds no decimal places to counts and one decimal to percentages
+                            all_continuous() ~ 1), #adds one decimal place to mean and sd values
+              missing_text = "Missing (n)"
+              ) %>%
+  add_p() %>% #compares male vs female, does not include overall in p-value calculation
+  add_overall() %>% #adds column with non-stratified summary statistics
+  modify_header(label ~ "**Variable**") %>% #the asterisks bold the label
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Sex**") %>%
+  bold_labels() %>%
+  as_flex_table() %>%
+  save_as_docx(path = here("summary_stats_table.docx")) #Export the table to Word using flextable package
+```
+
 
 # Do Exercise 2A
 
-# Take a random sample of the dataset
-
-```{r random_sample}
-## sample() to randomly sample
-samp <- sample(nhanes$seqn, 100)
-samp[1:20]
-samp1 <- sample(nhanes$seqn, 100, replace = T)
-samp1[1:20]
-```
 
 # Create a subset of the dataset
 
 ```{r subset}
-# subset(): You can create a subset from a data frame using the subset() function.
-# For example, create a dataset for race==1 (White).
-table(nhanes$race)
-nhanes.white <- subset(nhanes, nhanes$race == 1)
-dim(nhanes.white)
 
-# To select only the 'age', 'bmi', and 'sex' variables among Black people
-nhanes.black <- subset(nhanes, nhanes$race == 2, select = c(age, bmi, sex))
-dim(nhanes.black)
+# Practice subset: Keep only the female participants
+nhanes_subset <- nhanes_dataset %>%
+  filter(sex == "Female")
 
-# Use indexing []
-nhanes.young <- nhanes[nhanes$age < 30, ]
-dim(nhanes.young)
+# Keep only the participants who are iron deficient and older than 60 years using filter()
+nhanes_subset <- nhanes_dataset %>%
+  filter(iron_status == "Deficient" & RIDAGEYR >= 60)
+
+# How many participants have complete data?
+nhanes_subset %>%
+  na.omit() %>% #exclude any participants with missing data
+  dim() #what are the dimensions after excluding missing data?
 ```
 
 # Calculate descriptives on a subset of the dataset
 
 ```{r descriptive_statistics_subset}
 
-# Index within objects with [], create subsets, and you can run any R commands for subsets.
-mean(nhanes.white$age)
-sd(nhanes.black$age)
-
-table(nhanes$race, nhanes$sex)
-femalewhite <- nhanes[nhanes$sex == 2 & nhanes$race == 1, ]
-nrow(femalewhite)
-summary(femalewhite$age)
+# Create a table summarizing the new data subset
+nhanes_subset %>%
+  select(-SEQN,
+         -SDMVSTRA,
+         -SDMVPSU) %>%
+  tbl_summary()
 ```
 
-# Use the ifelse() function to create a categorical variable
-
-```{r ifelse}
-# ifelse
-length(nhanes$bmi[nhanes$bmi < 30])
-nhanes$obesity <- ifelse(nhanes$bmi >= 30, 1, 0)
-tab1(nhanes$obesity)
-
-nrow(nhanes[nhanes$htn == 1 & nhanes$bmi >= 30, ])
-nhanes$htnob <- ifelse(nhanes$htn == 1 & nhanes$bmi >= 30, 1, 0)
-tab1(nhanes$htnob)
-```
-
-# Create a categorical variable from a numeric variable
 
 # Use the cut function to slice a numeric variable into groups
+**Three different methods
 
 ```{r cut}
-## create a categorical variable
-AGE5a <- cut(nhanes$age, 5) # Five equally spaced intervals (14 yrs)
-summary(AGE5a)
-AGE5b <- cut(nhanes$age, quantile(nhanes$age, c(0, .2, .4, .6, .8, 1)), include.lowest = T) # Five groups with ~equal number of participants (quintiles)
-summary(AGE5b)
-AGE5c <- cut(nhanes$age, breaks = c(19, 40, 50, 60, 70, 90)) # Five groups based on pre-specified cut points
-summary(AGE5c)
-```
 
-# Use the tidyverse to categorize a numeric variable
+# Create five equal groups of participants based on age (same number of participants per group)
 
-```{r pipe_and_mutate}
-# Tidyverse: another way
-nhanes <- nhanes %>% # This is the pipe operator
-  mutate(AGE5d = case_when(  # Use the mutate function to add a new variable
-    age < 30 ~ 1,
-    age >= 30 & age < 40 ~ 2,
-    age >= 40 & age < 50 ~ 3,
-    age >= 50 & age < 60 ~ 4,
-    age >= 60 ~ 5,
-  ))
-summary(nhanes$AGE5d)
-```
+# Five groups with specified cut points
+nhanes_age <- nhanes_dataset %>%
+  mutate(cut_groups = cut(RIDAGEYR, breaks = c(0, 16, 32, 48, 64, 80)))
+table(nhanes_age$cut_groups)
 
-# Categorize a numeric variable the long way with indexing
+# Five groups based on quintiles - creates approximately equal groups
+nhanes_age <- nhanes_dataset %>%
+  mutate(cut_groups = cut(RIDAGEYR,
+                          quantile(RIDAGEYR, c(0, .2, .4, .6, .8, 1)),
+                          include.lowest = T))
+table(nhanes_age$cut_groups)
 
-```{r longform_categorization}
-# Long form: another way using brackets to index
-agecat <- nhanes$age
-agecat[nhanes$age < 30] <- "Twenties"
-agecat[nhanes$age >= 30 & nhanes$age < 40] <- "Thirties"
-agecat[nhanes$age >= 40 & nhanes$age < 50] <- "Fourties"
-agecat[nhanes$age >= 50 & nhanes$age < 60] <- "Fifties"
-agecat[nhanes$age >= 60 & nhanes$age < 70] <- "Sixties"
-agecat[nhanes$age >= 70 & nhanes$age < 80] <- "Seventies"
-agecat[nhanes$age >= 80] <- "Eighties"
-table(agecat)
+# Tidyverse method
+nhanes_age <- nhanes_dataset %>%
+  mutate(cut_groups = cut_number(RIDAGEYR, n = 5))
+table(nhanes_age$cut_groups)
 ```
 
 # Do Exercise 2B
 
 # Remember to save your R script!
-
-```{r save_modified_dataset}
-# Bind the variables that are useful to the nhanes data frame for use later
-nhanes <- cbind(nhanes, AGE5b, AGE5c)
-
-# Save the nhanes object you modified
-save(nhanes, file = here("nhanes3.rda"))
-
-```
 
 # To exit R
 
