@@ -251,26 +251,53 @@ str(nhanes_factor)
 ```{r categorical}
 
 # Create a categorical variable of iron status based on serum concentrations
-nhanes_dataset <- nhanes_factor %>%
+nhanes_iron_categ <- nhanes_factor %>%
   mutate(iron_status = case_when(LBXIRN < 60 ~ "Deficient",
                                  LBXIRN > 170 ~ "Excessive",
                                  LBXIRN >= 60 & LBXIRN <= 170 ~ "Normal")) %>%
   relocate(iron_status, .after = LBXIRN)
 ```
 
+
+# Use the cut function to slice a numeric variable into groups
+**Three different methods
+
+```{r cut}
+
+# Create five equal groups of participants based on age (same number of participants per group)
+
+# Five groups with specified cut points
+nhanes_age <- nhanes_iron_categ %>%
+  mutate(cut_groups = cut(RIDAGEYR, breaks = c(0, 16, 32, 48, 64, 80)))
+table(nhanes_age$cut_groups)
+
+# Five groups based on quintiles
+nhanes_age <- nhanes_iron_categ %>%
+  mutate(cut_groups = cut(RIDAGEYR,
+                          quantile(RIDAGEYR, c(0, .2, .4, .6, .8, 1)),
+                          include.lowest = T))
+table(nhanes_age$cut_groups)
+
+# Tidyverse method - makes groups of equal width
+nhanes_dataset <- nhanes_iron_categ %>%
+  mutate(cut_groups = cut_interval(RIDAGEYR, n = 5))
+table(nhanes_age$cut_groups)
+```
+
+
 # Save dataset for the future
 
 ```{r save_dataset}
 
 # Save dataset as a csv file
-write.csv(nhanes_dataset, file = here("nhanes_dataset.csv"),
+write.csv(nhanes_age, file = here("nhanes_dataset.csv"),
           row.names=FALSE)
 # Save dataset as an R object
-save(nhanes_dataset, file = here("nhanes_dataset.rda"))
+save(nhanes_age, file = here("nhanes_dataset.rda"))
 
 # Import dataset back into R from the csv or R object
 nhanes_dataset <- read.csv(here(("nhanes_dataset.csv")))
-nhanes_dataset <- load(here(("nhanes_dataset.rda")))
+# nhanes_dataset <- load(here(("nhanes_dataset.rda")))
 ```
 
 
@@ -387,32 +414,120 @@ nhanes_subset %>%
 ```
 
 
-# Use the cut function to slice a numeric variable into groups
-**Three different methods
+# Do Exercise 2B
 
-```{r cut}
 
-# Create five equal groups of participants based on age (same number of participants per group)
 
-# Five groups with specified cut points
-nhanes_age <- nhanes_dataset %>%
-  mutate(cut_groups = cut(RIDAGEYR, breaks = c(0, 16, 32, 48, 64, 80)))
-table(nhanes_age$cut_groups)
 
-# Five groups based on quintiles - creates approximately equal groups
-nhanes_age <- nhanes_dataset %>%
-  mutate(cut_groups = cut(RIDAGEYR,
-                          quantile(RIDAGEYR, c(0, .2, .4, .6, .8, 1)),
-                          include.lowest = T))
-table(nhanes_age$cut_groups)
+# Ordering data
 
-# Tidyverse method
-nhanes_age <- nhanes_dataset %>%
-  mutate(cut_groups = cut_number(RIDAGEYR, n = 5))
-table(nhanes_age$cut_groups)
+```{r}
+
+#order by sex and then age
+nhanes_ordered <- nhanes_dataset %>%
+  arrange(sex, RIDAGEYR)
 ```
 
-# Do Exercise 2B
+# Ready to do Exercise 3A
+
+
+
+# Check function default settings for handling missing values
+
+```{r check_default_missing}
+### How do functions handle missing values?
+
+#calculate a correlation between age and iron concentration
+cor(nhanes_ordered$RIDAGEYR, nhanes_ordered$LBXIRN)
+cor(nhanes_ordered$RIDAGEYR, nhanes_ordered$LBXIRN, use="complete.obs")
+
+#calculate summary statistics on iron
+summary(nhanes_ordered$LBXIRN)
+
+#calculate the mean of iron
+mean(nhanes_ordered$LBXIRN)
+mean(nhanes_ordered$LBXIRN, na.rm = TRUE)
+#note the na.omit - remove all rows that include NAs
+mean(na.omit(nhanes_ordered$LBXIRN))
+```
+
+# Try compiling results with a for loop
+
+```{r for_loop}
+# First prep the output dataset - set up blank columns
+out <- data.frame(matrix(nrow = ncol(nhanes_ordered), ncol = 3))
+
+#set the column names for the dataframe
+colnames(out) <- c("variable", "mean", "sd")
+
+#pull the column names from nhanes_ordered and set them as the values for the first column
+out[, 1] <- colnames(nhanes_ordered)
+
+# Then initiate the loop
+for (i in 1:ncol(nhanes_ordered)) {
+  out[i, 2] <- mean(as.numeric(nhanes_ordered[, i]), na.rm = TRUE)
+  out[i, 3] <- sd(as.numeric(nhanes_ordered[, i]), na.rm = TRUE)
+}
+out
+
+# Why do some variables have a mean of NA?
+```
+
+
+# Date and Time
+
+# Input variable formats, convert to desired format
+
+```{r date_format}
+# create some dates to use in this exercise
+bdays <- c("11/2/1959", "1/1/1970")
+bdays
+# convert to Julian dates
+bdays.julian <- as.Date(bdays, format = "%m/%d/%Y")
+bdays.julian
+
+as.numeric(bdays.julian)
+
+bdays.am <- format(bdays.julian, "%b %d, %Y")
+bdays.am
+
+# day of the week
+format(bdays.julian, "%a-%d%b%y")
+weekdays(bdays.julian)
+```
+
+# Calculate age as of today's date
+
+```{r age_from_date}
+date.today <- Sys.Date() # Sys.time or Sys.Date: Current time/Date
+date.today
+
+agecomp <- (date.today - bdays.julian) / 365.25
+agecomp
+
+agecomp2 <- trunc(as.numeric(agecomp))
+
+
+# create data frame
+bd <- data.frame(Birthday = bdays, Standard = bdays.julian, Julian = as.numeric(bdays.julian), Age = agecomp2)
+bd
+```
+
+# Paste function
+
+```{r paste}
+# combine (paste) two or more variables that are parts of date
+day1 <- c("12", "13", "14")
+month1 <- c("07", "08", "12")
+year1 <- c("1980", "2000", "2010")
+paste(day1, month1, year1)
+
+as.Date(paste(day1, month1, year1), "%d %m %Y")
+```
+
+# Ready to do Exercise 3B
+
+
 
 # Remember to save your R script!
 
