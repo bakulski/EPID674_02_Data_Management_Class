@@ -326,22 +326,22 @@ str(nhanes_iron_categ)
 ```{r cut}
 
 # Make groups of equal range
-nhanes_age <- nhanes_iron_categ %>%
+nhanes_dataset <- nhanes_iron_categ %>%
   mutate(cut_groups = cut_interval(RIDAGEYR, n = 5))
-table(nhanes_age$cut_groups)
+table(nhanes_dataset$cut_groups)
 
 
 # Other options:
 
 # Five groups with specified bin widths (16)
-nhanes_dataset <- nhanes_iron_categ %>%
+nhanes_age <- nhanes_iron_categ %>%
   mutate(cut_groups = cut_interval(RIDAGEYR, length = 16))
 table(nhanes_age$cut_groups)
 
 # Five groups with approximately equal numbers of participants (cut_number())
-nhanes_dataset <- nhanes_iron_categ %>%
+nhanes_age <- nhanes_iron_categ %>%
   mutate(cut_groups = cut_number(RIDAGEYR, n = 5))
-table(nhanes_dataset$cut_groups)
+table(nhanes_age$cut_groups)
 ```
 
 
@@ -350,10 +350,10 @@ table(nhanes_dataset$cut_groups)
 ```{r save_dataset}
 
 # Save dataset as a csv file
-write.csv(nhanes_age, file = here("nhanes_dataset.csv"),
+write.csv(nhanes_dataset, file = here("nhanes_dataset.csv"),
           row.names=FALSE)
 # Save dataset as an R object
-save(nhanes_age, file = here("nhanes_dataset.rda"))
+save(nhanes_dataset, file = here("nhanes_dataset.rda"))
 
 # Import dataset back into R from the csv or R object
 nhanes_dataset <- read.csv(here(("nhanes_dataset.csv")))
