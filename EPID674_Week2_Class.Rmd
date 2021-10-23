@@ -27,8 +27,6 @@ install.packages("tidyverse")
 install.packages("here")
 install.packages("nhanesA")
 install.packages("sjlabelled")
-install.packages("gtsummary")
-install.packages("flextable")
 
 # To avoid installing every time: change set up in curly brackets to eval=FALSE
 ```
@@ -40,8 +38,6 @@ library(tidyverse)
 library(here)
 library(nhanesA)
 library(sjlabelled)
-library(gtsummary)
-library(flextable)
 ```
 
 # Specify file directories
