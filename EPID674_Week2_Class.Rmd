@@ -53,19 +53,18 @@ here() # Orient yourself to the default file path format on your computer
 #"/cloud/project" 
 ```
 
-# Data Cleaning Plan
+# Data cleaning plan:
+1) Download demographics, complete blood counts, and chemical data
+2) Check datasets
+3) Keep only the useful variables
+4) Merge datasets
+5) Fix data types and set reference levels
+6) Create categorical variable
+7) Create age groups
+8) Save cleaned dataset
 
-```{r}
 
-# 1) Download demographics, complete blood counts, and chemical data
-# 2) Check datasets
-# 3) Keep only the useful variables
-# 4) Merge datasets
-# 5) Remove missing data
-# 6) Fix data types
-```
-
-# Import Datasets from 2017-2018 NHANES
+# Import datasets from 2017-2018 NHANES
 * Datasets can be found at: **https://wwwn.cdc.gov/nchs/nhanes/continuousnhanes/default.aspx?BeginYear=2017**
 * Data are saved in multiple datasets that we will need to combine
 * NHANES variables have labels as well as variable names - those labels need to be removed for merging
@@ -96,8 +95,19 @@ as <- nhanes("UTAS_J")
 as_unlab <- remove_label(as)
 colnames(as_unlab)
 
-# What variable is the same between the three datasets?
+# Download Cotinine Data, remove labels, check column names
+cotinine <- nhanes("COT_J")
+cotinine_unlab <- remove_label(cotinine)
+colnames(cotinine_unlab)
+
+# Download Cadmium and Lead Data, remove labels, check column names
+cd_pb <- nhanes("PBCD_J")
+cd_pb_unlab <- remove_label(cd_pb)
+colnames(cd_pb_unlab)
+
+# What variable is the same between the datasets?
 ```
+
 
 # Explore the NHANES dataset
 
@@ -114,6 +124,7 @@ head(demog_unlab) # What do the first 6 rows look like?
 demog_unlab[1:10, ] # What do the first 10 rows look like?
 ```
 
+
 # Explore individual variables in the NHANES dataset
 
 ```{r explore_variables}
@@ -126,6 +137,7 @@ demog_unlab$RIDAGEYR[1:10]
 # Look at the whole dataset
 View(demog_unlab)
 ```
+
 # Subset datasets to keep only useful variables
 
 ```{r select()}
@@ -155,7 +167,10 @@ dim(cbc_unlab)
 #8366   22
 cbc_subset <- cbc_unlab %>%
   select(SEQN,
-         LBXRBCSI)
+         LBXRBCSI,
+         LBXWBCSI,
+         LBDLYMNO,
+         LBDNENO)
 dim(cbc_subset)
 #8366    2
 
@@ -176,9 +191,29 @@ as_subset <- as_unlab %>%
          URXUAS)
 dim(as_subset)
 #2979    2
+
+############ Cotinine dataset ############
+dim(cotinine_unlab)
+#7936    5
+cotinine_subset <- cotinine_unlab %>%
+  select(SEQN,
+         LBXCOT)
+dim(cotinine_subset)
+#7936    2
+
+############ Cadmium/Lead dataset ############
+dim(cd_pb_unlab)
+#8366   16
+cd_pb_subset <- cd_pb_unlab %>%
+  select(SEQN,
+         LBXBCD,
+         LBXBPB)
+dim(cd_pb_subset)
+#8366    3
 ```
 
-# Merge four datasets into one
+
+# Merge six datasets into one
 
 ```{r data_merge}
 
@@ -193,21 +228,36 @@ demog_cbc_fe <- left_join(demog_cbc, fe_subset, by = "SEQN")
 str(demog_cbc_fe)
 
 # Merge the previous dataset and arsenic dataset
-demog_cbc_chems <- left_join(demog_cbc_fe, as_subset, by = "SEQN")
+demog_cbc_fe_as <- left_join(demog_cbc_fe, as_subset, by = "SEQN")
+# Check the merge - How many participants and variables do you expect?
+str(demog_cbc_fe_as)
+
+# Merge the previous dataset and cotinine dataset
+demog_cbc_fe_as_cot <- left_join(demog_cbc_fe_as, cotinine_subset, by = "SEQN")
+# Check the merge - How many participants and variables do you expect?
+str(demog_cbc_fe_as_cot)
+
+# Merge the previous dataset and cadmium/lead dataset
+demog_cbc_chems <- left_join(demog_cbc_fe_as_cot, cd_pb_subset, by = "SEQN")
 # Check the merge - How many participants and variables do you expect?
 str(demog_cbc_chems)
 ```
 
-# Convert number codes to words
+
+# Convert variables from numeric to factors
 
 ```{r}
 
-# check the initial counts of race/ethnicity and sex
+# Check the initial counts of race/ethnicity and sex
 table(demog_cbc_chems$RIDRETH1)
 table(demog_cbc_chems$RIASEX)
 
-# update race/ethnicity and sex from numbers to words
-nhanes_char <- demog_cbc_chems %>%
+# Check the initial data type of the variables
+str(demog_cbc_chems$RIDRETH1)
+str(demog_cbc_chems$RIASEX)
+
+# Update race/ethnicity and sex from numbers to characters
+nhanes_factor <- demog_cbc_chems %>%
   mutate(race_eth = case_when(RIDRETH1 == 1 ~ "Mexican American",
                               RIDRETH1 == 2 ~ "Other Hispanic",
                               RIDRETH1 == 3 ~ "Non-Hispanic White",
@@ -215,47 +265,62 @@ nhanes_char <- demog_cbc_chems %>%
                               RIDRETH1 == 5 ~ "Other Race"),
          sex = case_when(RIASEX == 1 ~ "Male",
                          RIASEX == 2 ~ "Female")) %>%
-  select(-RIDRETH1,
-         -RIASEX) %>%                 #drop the old variables
-  relocate(race_eth, .after = RIDAGEYR) %>% #reorder the columns because the table uses them in order
-  relocate(sex, .after = race_eth)
-  
-  
-table(nhanes_char$race_eth)
-table(nhanes_char$sex)
-# Do the counts still match?
-```
-
-# Set the data types
-
-```{r data_types}
-
-# Check the data types
-str(nhanes_char)
-
-# Sex and Race are currently set as integers - make them factors and set the reference level
-nhanes_factor <- nhanes_char %>%
-  mutate(sex = factor(sex),
+  mutate(sex = factor(sex),               #change the character variables into factor variables
          race_eth = factor(race_eth)) %>%
-  mutate(sex = relevel(sex,
+  mutate(sex = relevel(sex,               #set the reference levels
                        ref = "Male"),
          race_eth = relevel(race_eth,
-                            ref = "Non-Hispanic White"))
+                            ref = "Non-Hispanic White")) %>%
+  relocate(race_eth, .after = RIDAGEYR) %>% #reorder the columns to keep the demographics together (mutate() automatically adds the new variable to the end of the dataset)
+  relocate(sex, .after = race_eth)
+  
 
-# Check the data types again
-str(nhanes_factor)
+# Check the counts of the new variables
+table(nhanes_factor$race_eth)
+table(nhanes_factor$sex)
+
+# Do the counts still match?
+
+# Check the data type of the new variables
+str(nhanes_factor$race_eth)
+str(nhanes_factor$sex)
 ```
+
+
+# Create a new variable from continuous
+
+```{r}
+
+# Create a neutrophil:lymphocyte ratio variable (NLR)
+nhanes_nlr <- nhanes_factor %>%
+  mutate(nlr = LBDNENO / LBDLYMNO)
+
+
+# View the new variable to look at the changes
+nhanes_nlr %>%
+  dplyr::select(SEQN,
+                LBDNENO,
+                LBDLYMNO,
+                nlr) %>%
+  View()
+```
+
 
 # Create a categorical variable from a continuous
 
 ```{r categorical}
 
 # Create a categorical variable of iron status based on serum concentrations
-nhanes_iron_categ <- nhanes_factor %>%
+nhanes_iron_categ <- nhanes_nlr %>%
   mutate(iron_status = case_when(LBXIRN < 60 ~ "Deficient",
                                  LBXIRN > 170 ~ "Excessive",
                                  LBXIRN >= 60 & LBXIRN <= 170 ~ "Normal")) %>%
+  mutate(iron_status = relevel(factor(iron_status),
+                               ref = "Deficient")) %>%
   relocate(iron_status, .after = LBXIRN)
+
+# Check the structure of the dataset to see that iron_status is after LBXIRN and it is a factor with reference = "Deficient"
+str(nhanes_iron_categ)
 ```
 
 
@@ -264,24 +329,23 @@ nhanes_iron_categ <- nhanes_factor %>%
 
 ```{r cut}
 
-# Create five equal groups of participants based on age (same number of participants per group)
-
-# Five groups with specified cut points
+# Make groups of equal range
 nhanes_age <- nhanes_iron_categ %>%
-  mutate(cut_groups = cut(RIDAGEYR, breaks = c(0, 16, 32, 48, 64, 80)))
-table(nhanes_age$cut_groups)
-
-# Five groups based on quintiles
-nhanes_age <- nhanes_iron_categ %>%
-  mutate(cut_groups = cut(RIDAGEYR,
-                          quantile(RIDAGEYR, c(0, .2, .4, .6, .8, 1)),
-                          include.lowest = T))
-table(nhanes_age$cut_groups)
-
-# Tidyverse method - makes groups of equal width
-nhanes_dataset <- nhanes_iron_categ %>%
   mutate(cut_groups = cut_interval(RIDAGEYR, n = 5))
 table(nhanes_age$cut_groups)
+
+
+# Other options:
+
+# Five groups with specified bin widths (16)
+nhanes_dataset <- nhanes_iron_categ %>%
+  mutate(cut_groups = cut_interval(RIDAGEYR, length = 16))
+table(nhanes_age$cut_groups)
+
+# Five groups with approximately equal numbers of participants (cut_number())
+nhanes_dataset <- nhanes_iron_categ %>%
+  mutate(cut_groups = cut_number(RIDAGEYR, n = 5))
+table(nhanes_dataset$cut_groups)
 ```
 
 
@@ -297,9 +361,11 @@ save(nhanes_age, file = here("nhanes_dataset.rda"))
 
 # Import dataset back into R from the csv or R object
 nhanes_dataset <- read.csv(here(("nhanes_dataset.csv")))
-# nhanes_dataset <- load(here(("nhanes_dataset.rda")))
+load(here(("nhanes_dataset.rda")))
 ```
 
+
+####################Split Point##########################
 
 
 # Data description functions, numeric variables
@@ -325,6 +391,18 @@ nhanes_dataset %>%
 # Note: good practice to add ungroup() after using it to avoid the dataset staying grouped
 nhanes_dataset %>%
   group_by(sex) %>%
+  summarise(age_min = min(RIDAGEYR),
+            age_25_quart = quantile(RIDAGEYR, probs = 0.25),
+            age_mean = mean(RIDAGEYR),
+            age_median = median(RIDAGEYR),
+            age_75_quart = quantile(RIDAGEYR, probs = 0.75),
+            age_iqr = IQR(RIDAGEYR),
+            age_max = max(RIDAGEYR)) %>%
+  ungroup()
+
+# Do activity with this example
+nhanes_dataset %>%
+  group_by(sex) %>%
   summarise(age_mean = mean(RIDAGEYR),
             pir_mean = mean(INDFMPIR, na.rm = TRUE)) %>%
   ungroup()
@@ -342,7 +420,7 @@ table(nhanes_dataset$race_eth, nhanes_dataset$sex)
 # Create a publication-formatted table
 
 ```{r}
-# gtsummary package method
+# Univariate table using gtsummary package
 nhanes_dataset %>%
   select(-SEQN,
          -SDMVSTRA,
@@ -350,12 +428,13 @@ nhanes_dataset %>%
   tbl_summary()
 
 
-# stratified analysis by sex using gtsummary
-# To view the table in RMarkdown, comment out the last pipe and save_as_docx() function
-nhanes_dataset %>%
+# Bivariate table by sex using gtsummary - will take about 5 seconds to run
+bivar_nhanes <- nhanes_dataset %>%
   select(-SEQN,
          -SDMVSTRA,
-         -SDMVPSU) %>%
+         -SDMVPSU,
+         -RIASEX,
+         -RIDRETH1) %>%
   tbl_summary(by = sex, #stratify by sex
               label = list(RIDAGEYR    ~ "Age (years)", #update the variable names
                            race_eth    ~ "Race/Ethnicity",
@@ -374,7 +453,14 @@ nhanes_dataset %>%
   add_overall() %>% #adds column with non-stratified summary statistics
   modify_header(label ~ "**Variable**") %>% #the asterisks bold the label
   modify_spanning_header(c("stat_1", "stat_2") ~ "**Sex**") %>%
-  bold_labels() %>%
+  bold_labels()
+
+#View table
+bivar_nhanes
+
+
+# Save the table as a Word document - some formatting such as bold headers will be lost
+bivar_nhanes %>%
   as_flex_table() %>%
   save_as_docx(path = here("summary_stats_table.docx")) #Export the table to Word using flextable package
 ```
@@ -401,17 +487,6 @@ nhanes_subset %>%
   dim() #what are the dimensions after excluding missing data?
 ```
 
-# Calculate descriptives on a subset of the dataset
-
-```{r descriptive_statistics_subset}
-
-# Create a table summarizing the new data subset
-nhanes_subset %>%
-  select(-SEQN,
-         -SDMVSTRA,
-         -SDMVPSU) %>%
-  tbl_summary()
-```
 
 
 # Do Exercise 2B
@@ -450,6 +525,25 @@ mean(nhanes_ordered$LBXIRN, na.rm = TRUE)
 #note the na.omit - remove all rows that include NAs
 mean(na.omit(nhanes_ordered$LBXIRN))
 ```
+
+
+# Exclude some data 
+
+```{r}
+
+# Check the original counts 
+table(nhanes_ordered$RIDAGEYR, useNA = "always")
+
+# Exclude data for participants who are less than 1 years old
+nhanes_age_1_85 <- nhanes_ordered %>%
+  na_if(RIDAGEYR, 0) %>% #make all ages of 0 missing
+  drop_na(RIDAGEYR) #if there is a missing in RIDAGEYR, drop that participant row (will drop participants who were age 0)
+
+# Check new counts
+table(nhanes_age_1_85$RIDAGEYR, useNA = "always")
+```
+
+
 
 # Try compiling results with a for loop
 
