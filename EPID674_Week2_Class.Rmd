@@ -150,13 +150,15 @@ demog_subset <- demog_unlab %>%
          RIDAGEYR, #age in years
          RIDRETH1, #race in number code
          INDFMPIR, #poverty-income ratio
+         DMDEDUC3, #education categories for age 6-19
+         DMDEDUC2, #education categories for age 20+
          #these two are for later (survey weighting)
          SDMVSTRA, #Strata: based on census region, metropolitan area, or population demographics
          SDMVPSU   #Primary Sampling Unit: 30 per nhanes cycle - mostly single counties, selected from strata
          ) %>%
   rename(RIASEX = RIAGENDR) #rename RIAGENDR to be RIASEX because NHANES asked about sex, not gender
 dim(demog_subset)
-#9254    7 - number of rows does not change
+#9254    9 - number of rows does not change
 
 ############ Complete blood count dataset ############
 dim(cbc_unlab)
@@ -240,7 +242,7 @@ str(demog_cbc_chems)
 ```
 
 
-# Convert variables from numeric to factors
+# Convert race/ethnicity and sex variables from numeric to factors
 
 ```{r}
 
@@ -269,7 +271,6 @@ nhanes_factor <- demog_cbc_chems %>%
                             ref = "Non-Hispanic White")) %>%
   relocate(race_eth, .after = RIDAGEYR) %>% #reorder the columns to keep the demographics together (mutate() automatically adds the new variable to the end of the dataset)
   relocate(sex, .after = race_eth)
-  
 
 # Check the counts of the new variables
 table(nhanes_factor$race_eth)
@@ -283,12 +284,70 @@ str(nhanes_factor$sex)
 ```
 
 
+# Clean and convert the education variables from numeric to factors
+* **https://wwwn.cdc.gov/Nchs/Nhanes/2017-2018/DEMO_J.htm**
+
+```{r}
+
+# DMDEDUC3 - participants 6 - 19 years old
+# DMDEDUC2 - participants 20+ years old
+
+# Check original counts of DMDEDUC3
+table(nhanes_factor$RIDAGEYR < 20, useNA = "always") #3685 participants under 20
+table(nhanes_factor$DMDEDUC3, useNA = "always") #values 0-15 and 66
+table(nhanes_factor$DMDEDUC3 >= 0, useNA = "always") #2306 participants with education reported
+
+# Check original counts of DMDEDUC2
+table(nhanes_factor$RIDAGEYR >= 20, useNA = "always") #5569 participants 20+ years
+table(nhanes_factor$DMDEDUC2, useNA = "always") #values 1-5, 7, 9
+table(nhanes_factor$DMDEDUC2 >= 0, useNA = "always") #5569 participants with data (13 with 7 or 9)
+
+# Update the numeric codes to categories
+nhanes_educ2_3 <- nhanes_factor %>%
+  mutate(education0 = case_when(DMDEDUC3 >= 0 & DMDEDUC3 <= 5 ~ "Less than 5th grade",
+                                DMDEDUC3 >= 6 & DMDEDUC3 <= 12 | DMDEDUC3 == 66 ~ "Less than high school",
+                                DMDEDUC3 == 13 | DMDEDUC3 == 14 ~ "High school or GED",
+                                DMDEDUC3 == 15 ~ "More than high school")) %>%
+  mutate(education20 = case_when(DMDEDUC2 == 1 | DMDEDUC2 == 2 ~ "Less than high school",
+                                 DMDEDUC2 == 3 ~ "High school or GED",
+                                 DMDEDUC2 == 4 | DMDEDUC2 == 5 ~ "More than high school",
+                                 DMDEDUC2 == 7 | DMDEDUC2 == 9 ~ "Unknown")) %>%
+  mutate(education20 = na_if(education20, "Unknown")) #Make all the "Unknown" values missing
+
+# Check the counts
+table(nhanes_educ2_3$education0, useNA = "always")
+table(nhanes_educ2_3$education20, useNA = "always")
+
+
+# Merge the two education variables
+nhanes_educ <- nhanes_educ2_3 %>%
+  mutate(education = coalesce(education0,
+                              education20))
+
+# View the last three columns in the dataset
+View(nhanes_educ)
+
+# Set the factor levels and reference for education
+nhanes_educ <- nhanes_educ %>%
+  mutate(education = relevel(factor(education,
+                                    levels = c("Less than 5th grade",
+                                               "Less than high school",
+                                               "High school or GED",
+                                               "More than high school")),
+                             ref = "Less than high school"))
+
+# Check the counts
+table(nhanes_educ$education, useNA = "always")
+# Note: setting a reference automatically makes the reference the first level
+```
+
+
 # Create a new variable from continuous
 
 ```{r}
 
 # Create a neutrophil:lymphocyte ratio variable (NLR)
-nhanes_nlr <- nhanes_factor %>%
+nhanes_nlr <- nhanes_educ %>%
   mutate(nlr = LBDNENO / LBDLYMNO)
 
 
