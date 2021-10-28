@@ -269,8 +269,8 @@ nhanes_factor <- demog_cbc_chems %>%
                        ref = "Male"),
          race_eth = relevel(race_eth,
                             ref = "Non-Hispanic White")) %>%
-  relocate(race_eth, .after = RIDAGEYR) %>% #reorder the columns to keep the demographics together (mutate() automatically adds the new variable to the end of the dataset)
-  relocate(sex, .after = race_eth)
+  relocate(race_eth, .after = RIDRETH1) %>% #reorder the columns to keep the demographics together (mutate() automatically adds the new variable to the end of the dataset)
+  relocate(sex, .after = RIASEX)
 
 # Check the counts of the new variables
 table(nhanes_factor$race_eth)
@@ -327,14 +327,17 @@ nhanes_educ <- nhanes_educ2_3 %>%
 # View the last three columns in the dataset
 View(nhanes_educ)
 
-# Set the factor levels and reference for education
+# Set the factor levels and reference for education, reorder the columns
 nhanes_educ <- nhanes_educ %>%
   mutate(education = relevel(factor(education,
                                     levels = c("Less than 5th grade",
                                                "Less than high school",
                                                "High school or GED",
                                                "More than high school")),
-                             ref = "Less than high school"))
+                             ref = "Less than high school")) %>%
+  relocate(education0, .after = DMDEDUC2) %>%
+  relocate(education20, .after = education0) %>%
+  relocate(education, .after = education20)
 
 # Check the counts
 table(nhanes_educ$education, useNA = "always")
@@ -348,7 +351,8 @@ table(nhanes_educ$education, useNA = "always")
 
 # Create a neutrophil:lymphocyte ratio variable (NLR)
 nhanes_nlr <- nhanes_educ %>%
-  mutate(nlr = LBDNENO / LBDLYMNO)
+  mutate(nlr = LBDNENO / LBDLYMNO) %>%
+  relocate(nlr, .after = LBDNENO)
 
 
 # View the new variable to look at the changes
@@ -386,7 +390,8 @@ str(nhanes_iron_categ)
 
 # Make groups of equal range
 nhanes_dataset <- nhanes_iron_categ %>%
-  mutate(cut_groups = cut_interval(RIDAGEYR, n = 5))
+  mutate(cut_groups = cut_interval(RIDAGEYR, n = 5)) %>%
+  relocate(cut_groups, .after = RIDAGEYR)
 table(nhanes_dataset$cut_groups)
 
 
@@ -415,6 +420,7 @@ write.csv(nhanes_dataset, file = here("nhanes_dataset.csv"),
 save(nhanes_dataset, file = here("nhanes_dataset.rda"))
 
 # Import dataset back into R from the csv or R object
+# Only R object keeps the preset factor variables saved
 nhanes_dataset <- read.csv(here(("nhanes_dataset.csv")))
 load(here(("nhanes_dataset.rda")))
 ```
