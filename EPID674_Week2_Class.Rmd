@@ -353,10 +353,10 @@ nhanes_nlr <- nhanes_educ %>%
 
 # View the new variable to look at the changes
 nhanes_nlr %>%
-  dplyr::select(SEQN,
-                LBDNENO,
-                LBDLYMNO,
-                nlr) %>%
+  select(SEQN,
+         LBDNENO,
+         LBDLYMNO,
+         nlr) %>%
   View()
 ```
 
