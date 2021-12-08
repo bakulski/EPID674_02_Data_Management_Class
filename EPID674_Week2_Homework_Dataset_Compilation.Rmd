@@ -78,8 +78,8 @@ metals_clean <- metals %>%
 # Merge four datasets
 nhanes_merge <- left_join(demog_clean, cog_clean, by = "SEQN") %>%
   left_join(., cotinine_clean, by = "SEQN") %>%
-  left_join(., metals_clean, by = "SEQN") %>%
-  na.omit()
+  left_join(., metals_clean, by = "SEQN")
+
 
 dim(nhanes_merge)
 #698  12
@@ -121,11 +121,10 @@ nhanes_clean <- nhanes_merge %>%
                          CFDDS <= 32 ~ "Mild Cognitive Impairment"),
          MCI = relevel(factor(MCI),
                        ref = "No Impairment")) %>%
-  rename(DSST = CFDDS) %>%
   relocate(race_eth, .after = RIDRETH1) %>%
   relocate(sex, .after = RIAGENDR) %>%
   relocate(education, .after = DMDEDUC2) %>%
-  relocate(MCI, .after = DSST)
+  relocate(MCI, .after = CFDDS)
 
 
 # Make age groups of equal range
