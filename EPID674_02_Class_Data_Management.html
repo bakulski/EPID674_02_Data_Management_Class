@@ -243,7 +243,7 @@ div.tocify {
 <h1 class="title toc-ignore">EPID674 Epidemiologic Data Analysis using R</h1>
 <h3 class="subtitle">Wrangling and Exploring Data with R</h3>
 <h4 class="author">Kelly Bakulski, Lauren Middleton</h4>
-<h4 class="date">Last compiled on December 01, 2021</h4>
+<h4 class="date">Last compiled on December 12, 2021</h4>
 
 </div>
 
@@ -1170,8 +1170,8 @@ str(nhanes_iron_categ)</code></pre>
 <h1>Use the cut function to slice a numeric variable into groups</h1>
 <pre class="r"><code># Make groups of equal range
 nhanes_dataset &lt;- nhanes_iron_categ %&gt;%
-  mutate(cut_groups = cut_interval(RIDAGEYR, n = 5)) 
-table(nhanes_dataset$cut_groups)</code></pre>
+  mutate(age_groups = cut_interval(RIDAGEYR, n = 5)) 
+table(nhanes_dataset$age_groups)</code></pre>
 <pre><code>## 
 ##  [0,16] (16,32] (32,48] (48,64] (64,80] 
 ##    3250    1519    1349    1636    1500</code></pre>
@@ -1192,10 +1192,10 @@ table(nhanes_age$cut_groups)</code></pre>
 <div id="save-dataset-for-the-future" class="section level1">
 <h1>Save dataset for the future</h1>
 <pre class="r"><code># Reorder the variable names for next time
-nhanes_col &lt;-  c(&quot;SEQN&quot;, &quot;RIASEX&quot;, &quot;sex&quot;, &quot;RIDAGEYR&quot;, &quot;cut_groups&quot;, &quot;RIDRETH1&quot;, &quot;race_eth&quot;,  &quot;INDFMPIR&quot;, &quot;DMDEDUC3&quot;, &quot;DMDEDUC2&quot;, &quot;education_youth&quot;, &quot;education_adult&quot;, &quot;education&quot;,       &quot;SDMVSTRA&quot;, &quot;SDMVPSU&quot;, &quot;LBXRBCSI&quot;, &quot;LBXWBCSI&quot;, &quot;LBDLYMNO&quot;, &quot;LBDNENO&quot;, &quot;nlr&quot;, &quot;LBXIRN&quot;, &quot;iron_status&quot;, &quot;URXUAS&quot;, &quot;LBXBCD&quot;, &quot;LBXBPB&quot;, &quot;LBXCOT&quot;)
+nhanes_col &lt;-  c(&quot;SEQN&quot;, &quot;RIASEX&quot;, &quot;sex&quot;, &quot;RIDAGEYR&quot;, &quot;age_groups&quot;, &quot;RIDRETH1&quot;, &quot;race_eth&quot;,  &quot;INDFMPIR&quot;, &quot;DMDEDUC3&quot;, &quot;DMDEDUC2&quot;, &quot;education_youth&quot;, &quot;education_adult&quot;, &quot;education&quot;,       &quot;SDMVSTRA&quot;, &quot;SDMVPSU&quot;, &quot;LBXRBCSI&quot;, &quot;LBXWBCSI&quot;, &quot;LBDLYMNO&quot;, &quot;LBDNENO&quot;, &quot;nlr&quot;, &quot;LBXIRN&quot;, &quot;iron_status&quot;, &quot;URXUAS&quot;, &quot;LBXBCD&quot;, &quot;LBXBPB&quot;, &quot;LBXCOT&quot;)
 nhanes_dataset &lt;- relocate(nhanes_dataset, all_of(nhanes_col))
 head(nhanes_dataset)</code></pre>
-<pre><code>##    SEQN RIASEX    sex RIDAGEYR cut_groups RIDRETH1           race_eth INDFMPIR
+<pre><code>##    SEQN RIASEX    sex RIDAGEYR age_groups RIDRETH1           race_eth INDFMPIR
 ## 1 93703      2 Female        2     [0,16]        5         Other Race     5.00
 ## 2 93704      1   Male        2     [0,16]        3 Non-Hispanic White     5.00
 ## 3 93705      2 Female       66    (64,80]        4 Non-Hispanic Black     0.82
@@ -1234,7 +1234,7 @@ nhanes_dataset_csv &lt;- read_csv(here((&quot;nhanes_dataset.csv&quot;)))</code>
 <pre><code>## Rows: 9254 Columns: 26</code></pre>
 <pre><code>## ── Column specification ────────────────────────────────────────────────────────
 ## Delimiter: &quot;,&quot;
-## chr  (7): sex, cut_groups, race_eth, education_youth, education_adult, educa...
+## chr  (7): sex, age_groups, race_eth, education_youth, education_adult, educa...
 ## dbl (19): SEQN, RIASEX, RIDAGEYR, RIDRETH1, INDFMPIR, DMDEDUC3, DMDEDUC2, SD...</code></pre>
 <pre><code>## 
 ## ℹ Use `spec()` to retrieve the full column specification for this data.

@@ -1,12 +1,14 @@
 ---
 title: "EPID674 Epidemiologic Data Analysis using R"
-subtitle: "Wrangling and Exploring Data with R"
 author: "Kelly Bakulski, Lauren Middleton"
 date: "Last compiled on `r format(Sys.Date(), '%B %d, %Y')`"
 output:
+  word_document:
+    toc: yes
   html_document:
     toc: yes
     toc_float: yes
+subtitle: Wrangling and Exploring Data with R
 ---
 
 ```{r setup, include=FALSE}
@@ -396,8 +398,8 @@ str(nhanes_iron_categ)
 
 # Make groups of equal range
 nhanes_dataset <- nhanes_iron_categ %>%
-  mutate(cut_groups = cut_interval(RIDAGEYR, n = 5)) 
-table(nhanes_dataset$cut_groups)
+  mutate(age_groups = cut_interval(RIDAGEYR, n = 5)) 
+table(nhanes_dataset$age_groups)
 
 
 # Other options:
@@ -424,7 +426,7 @@ Serum cotinine is a continuous variable in our dataset. Let's use it to create a
 ```{r save_dataset}
 
 # Reorder the variable names for next time
-nhanes_col <-  c("SEQN", "RIASEX", "sex", "RIDAGEYR", "cut_groups", "RIDRETH1", "race_eth",  "INDFMPIR", "DMDEDUC3", "DMDEDUC2", "education_youth", "education_adult", "education",       "SDMVSTRA", "SDMVPSU", "LBXRBCSI", "LBXWBCSI", "LBDLYMNO", "LBDNENO", "nlr", "LBXIRN", "iron_status", "URXUAS", "LBXBCD", "LBXBPB", "LBXCOT")
+nhanes_col <-  c("SEQN", "RIASEX", "sex", "RIDAGEYR", "age_groups", "RIDRETH1", "race_eth",  "INDFMPIR", "DMDEDUC3", "DMDEDUC2", "education_youth", "education_adult", "education",       "SDMVSTRA", "SDMVPSU", "LBXRBCSI", "LBXWBCSI", "LBDLYMNO", "LBDNENO", "nlr", "LBXIRN", "iron_status", "URXUAS", "LBXBCD", "LBXBPB", "LBXCOT")
 nhanes_dataset <- relocate(nhanes_dataset, all_of(nhanes_col))
 head(nhanes_dataset)
 
