@@ -78,8 +78,8 @@ metals_clean <- metals %>%
 # Merge four datasets
 nhanes_merge <- left_join(demog_clean, cog_clean, by = "SEQN") %>%
   left_join(., cotinine_clean, by = "SEQN") %>%
-  left_join(., metals_clean, by = "SEQN") %>%
-  na.omit()
+  left_join(., metals_clean, by = "SEQN")
+
 
 dim(nhanes_merge)
 #698  12
@@ -92,10 +92,11 @@ dim(nhanes_merge)
 
 # Calculate MCI cutoff based on: https://www.sciencedirect.com/science/article/pii/S0160412014003250?via%3Dihub
 summary(nhanes_merge$CFDDS)
-#25th percentile is 32, min=5, median=46, max=93
+#25th percentile is 33, min=5, median=46, max=93
 
-# Label values, set references, create MCI variable, reorder variables
+# Subset age, label values, set references, create MCI variable, reorder variables
 nhanes_clean <- nhanes_merge %>%
+  filter(RIDAGEYR >= 60) %>%
   mutate(race_eth = case_when(RIDRETH1 == 1 ~ "Mexican American",
                               RIDRETH1 == 2 ~ "Other Hispanic",
                               RIDRETH1 == 3 ~ "Non-Hispanic White",
@@ -117,15 +118,14 @@ nhanes_clean <- nhanes_merge %>%
                                                "High school or GED",
                                                "More than high school")),
                              ref = "Less than high school")) %>%
-  mutate(MCI = case_when(CFDDS > 32 ~ "No Impairment",
-                         CFDDS <= 32 ~ "Mild Cognitive Impairment"),
+  mutate(MCI = case_when(CFDDS > 33 ~ "No Impairment",
+                         CFDDS <= 33 ~ "Mild Cognitive Impairment"),
          MCI = relevel(factor(MCI),
                        ref = "No Impairment")) %>%
-  rename(DSST = CFDDS) %>%
   relocate(race_eth, .after = RIDRETH1) %>%
   relocate(sex, .after = RIAGENDR) %>%
   relocate(education, .after = DMDEDUC2) %>%
-  relocate(MCI, .after = DSST)
+  relocate(MCI, .after = CFDDS)
 
 
 # Make age groups of equal range
@@ -134,10 +134,19 @@ nhanes_homework <- nhanes_clean %>%
   relocate(age_groups, .after = RIDAGEYR)
 table(nhanes_homework$age_groups, nhanes_homework$race_eth)
 
-  #            Non-Hispanic White Mexican American Non-Hispanic Black Other Hispanic Other Race
-  # [60,66.7]                 114              35                 67              31    26
-  # (66.7,73.3]               109              21                 38              17    26
-  # (73.3,80]                 160              11                 25               7    11
+nhanes_homework <- nhanes_homework %>%
+  mutate(age_groups = relevel(factor(age_groups),
+                            ref = "[60,66.7]"))
+
+  #             Non-Hispanic White Mexican American Non-Hispanic Black Other Hispanic
+  # [60,66.7]                  256              109                181             82
+  # (66.7,73.3]                230               65                107             44
+  # (73.3,80]                  410               36                100             28
+  #            
+  #             Other Race
+  # [60,66.7]           89
+  # (66.7,73.3]         60
+  # (73.3,80]           44
 ```
 
 
