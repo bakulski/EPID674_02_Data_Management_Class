@@ -1,0 +1,103 @@
+---
+title: "EPID 674: Data Management in R"
+subtitle: "Homework 2"
+author: "List your name here"
+date: "Last compiled on `r format(Sys.Date(), '%B %d, %Y')`"
+output: 
+  word_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load Libraries
+
+```{r load_libraries}
+library(nhanesA)
+library(tidyverse)
+library(sjlabelled)
+library(here)
+```
+
+
+# 1. Load data from 2013-2014 NHANES cycle and check the dimensions
+
+```{r load_data}
+
+# Insert code for loading data and checking dimensions here
+
+```
+Interpret the output and provide answer to question 1 here.
+
+# 2. Select columns of interest, join the datasets, and filter the participants.
+
+## Select useful variables to keep
+
+```{r select_variables}
+
+# Insert code for selecting the variables of interest to keep
+
+```
+
+
+## Join the selected datasets together
+
+```{r join_datasets}
+
+# Insert code for joining the datasets
+
+```
+
+##  Filter the joined dataset to participants of interest
+
+```{r filter_dataset}
+
+# Insert code for filtering the participants of interest to keep
+
+```
+
+Interpret the output and provide answer to question 2 here.
+
+
+
+# 3. Create categorical variables from continuous variables
+
+## 3a. Create a sex category variable from existing numeric variable
+
+```{r sex_factor_variable}
+
+# Insert code for creating sex category variable here.
+
+```
+Interpret the output and provide answer to question 3a here.
+
+
+## 3b. Create binary mild cognitive impairment variable based on continuous cognition values
+
+```{r mild_cognitive_impairment}
+
+# Insert code for creating cognitive impairment category variable here.
+
+```
+Interpret the output and provide answer to question 3b here.
+
+## 3c. Make age category variable
+
+```{r age_groups}
+
+# Insert code for creating age group variable here.
+
+```
+Interpret the output and provide answer to question 3c here.
+
+
+# 4. Save dataset
+
+```{r save_dataset}
+
+# Insert code for saving, loading, and checking the class of dataset here.
+
+```
+Interpret the output and provide answer to question 4 here.

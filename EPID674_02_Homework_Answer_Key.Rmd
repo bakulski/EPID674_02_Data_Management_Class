@@ -1,0 +1,245 @@
+---
+title: "EPID 674: Data Management in R"
+subtitle: "Homework 2"
+author: "Kelly Bakulski, Lauren Middleton"
+date: "Last compiled on `r format(Sys.Date(), '%B %d, %Y')`"
+output: 
+  word_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load Libraries
+
+```{r load_libraries}
+library(nhanesA)
+library(tidyverse)
+library(sjlabelled)
+library(here)
+```
+
+
+# 1. Load data from 2013-2014 NHANES cycle and check the dimensions
+
+```{r load_data}
+
+# Load demographic data
+demog <- nhanes("DEMO_H")
+dim(demog)
+
+# Load cognitive data
+cog <- nhanes("CFQ_H")
+dim(cog)
+
+# Load cotinine data
+cotinine <- nhanes("COT_H")
+dim(cotinine)
+
+# Load lead and cadmium data
+metals <- nhanes("PBCD_H")
+dim(metals)
+```
+The demographics dataset has `r nrow(demog)` rows and `r ncol(demog)` columns.
+The cognitive dataset has `r nrow(cog)` rows and `r ncol(cog)` columns.
+The cotinine dataset has `r nrow(cotinine)` rows and `r ncol(cotinine)` columns.
+The metals dataset has `r nrow(metals)` rows and `r ncol(metals)` columns.
+
+# 2. Select columns of interest, join the datasets, and filter the participants.
+
+## Select useful variables to keep
+
+```{r select_variables}
+
+# For each dataset, select the variables of interest to keep
+demog_clean <- demog %>%
+  select(SEQN,
+         RIAGENDR,
+         RIDAGEYR,
+         RIDRETH1,
+         INDFMPIR,
+         DMDEDUC2,
+         SDMVSTRA,
+         SDMVPSU
+         ) 
+
+cog_clean <- cog %>%
+  select(SEQN,
+         CFDDS)
+
+cotinine_clean <- cotinine %>%
+  select(SEQN,
+         LBXCOT) 
+
+metals_clean <- metals %>%
+  select(SEQN,
+         LBXBPB,
+         LBXBCD)
+```
+
+
+## Join the selected datasets together
+
+```{r join_datasets}
+
+# Join the four datasets
+nhanes_join <- left_join(demog_clean, cog_clean, by = "SEQN") %>%
+  left_join(., cotinine_clean, by = "SEQN") %>%
+  left_join(., metals_clean, by = "SEQN")
+
+
+dim(nhanes_join)
+#10175 12
+```
+
+##  Filter the joined dataset to participants of interest
+
+```{r filter_dataset}
+
+nhanes_filter <- nhanes_join %>%
+  filter(RIDAGEYR >= 60)
+
+dim(nhanes_filter)
+# 1841 12
+```
+
+The selected, joined, and filtered dataset has `r nrow(nhanes_filter)` rows and `r ncol(nhanes_filter)` columns.
+
+
+
+# 3. Create categorical variables from continuous variables
+
+## 3a. Create a sex category variable from existing numeric variable
+
+```{r sex_factor_variable}
+
+# Check the initial distribution
+table(nhanes_filter$RIAGENDR, useNA = "always")
+
+nhanes_homework <- nhanes_filter %>%
+  mutate(sex = case_when(RIAGENDR == 1 ~ "Male",
+                         RIAGENDR == 2 ~ "Female"))
+
+# Optional, establish age_groups as a factor variable and set reference level
+nhanes_homework <- nhanes_homework %>%   
+  mutate(sex = relevel(factor(sex),
+                       ref = "Male"))
+
+
+# Check the final distribution
+table(nhanes_homework$sex, useNA = "always")
+```
+The number of participants in the "Male" category of the new sex variable is `r length(nhanes_homework$sex[nhanes_homework$sex == "Male"])`. The number of participants with the existing variable RIAGENDR value equal to 1 is `r length(nhanes_homework$RIAGENDR[nhanes_homework$RIAGENDR == 1])`. Yes, these values match.
+
+
+## 3b. Create binary mild cognitive impairment variable based on continuous cognition values
+
+```{r mild_cognitive_impairment}
+
+# Calculate MCI cutoff based on: https://www.sciencedirect.com/science/article/pii/S0160412014003250?via%3Dihub
+
+# Check the initial distribution of the CFDDS variable
+summary(nhanes_homework$CFDDS)
+#25th percentile is 33, min=5, median=46, max=93
+
+# Create the mild cognitive impairment variable
+nhanes_homework <- nhanes_homework %>%
+  mutate(MCI = case_when(CFDDS > 33 ~ "No Impairment",
+                         CFDDS <= 33 ~ "Mild Cognitive Impairment"),
+         MCI = relevel(factor(MCI),
+                       ref = "No Impairment"))
+
+# Note, students were not asked to relevel this variable, no points are attributed to that step.
+
+# Optional, look at the top of these variables that were created.
+nhanes_homework %>%
+  select(CFDDS, MCI) %>%
+  head()
+
+# Check the number of participants in each of these categories.
+table(nhanes_homework$MCI, useNA = "always")
+# 1189 No Impairment
+# 403 Mild Cognitive Impairment
+# 249 NA
+```
+The number of participants in the "No Impairment" category of the new variable is `r length(nhanes_homework$MCI[nhanes_homework$MCI == "No Impairment"])`. The number of participants in the "Mild Cognitive impairment" category of the new variable is `r length(nhanes_homework$MCI[nhanes_homework$MCI == "Mild Cognitive Impairment"])`.
+
+
+## 3c. Make age category variable
+
+```{r age_groups}
+# Optional, check the distribution of age in our dataset
+summary(nhanes_homework$RIDAGEYR)
+
+# Make age groups of equal range
+nhanes_homework <- nhanes_homework %>%
+  mutate(age_groups = cut_interval(RIDAGEYR, n = 4))
+
+# Check how many partipants are in each group and what ages are in each group
+table(nhanes_homework$age_groups, useNA = "always")
+
+
+# Optional, establish age_groups as a factor variable and set reference level
+nhanes_homework <- nhanes_homework %>%
+  mutate(age_groups = relevel(factor(age_groups),
+                            ref = "[60,65]"))
+```
+The lowest age group represents participants ages `r `levels(nhanes_homework$age_groups)[1]`, which means greater than or equal to age 60 and less than or equal to age 65 years. 
+The number of participants in the lowest age group is `r table(nhanes_homework$age_groups, useNA = "always")[1]`. 
+
+
+# Wrangle variables not included in the assignment for future use (not part of the homework assignment)
+
+```{r relevel_factor_variables}
+# Note, students were not asked to clean the education or race/ethnicity variables in this homework, so no points are attributed to these step. These steps are done to prepare the dataset for future assignments.
+
+# Create the education factor variable
+nhanes_homework <- nhanes_homework %>%
+  mutate(education = case_when(DMDEDUC2 == 1 | DMDEDUC2 == 2 ~ "Less than high school",
+                               DMDEDUC2 == 3 ~ "High school or GED",
+                               DMDEDUC2 == 4 | DMDEDUC2 == 5 ~ "More than high school",
+                               DMDEDUC2 == 7 | DMDEDUC2 == 9 ~ "Unknown"),
+         education = na_if(education, "Unknown")) %>% #no missings
+  mutate(education = relevel(factor(education,
+                                    levels = c("Less than high school",
+                                               "High school or GED",
+                                               "More than high school")),
+                             ref = "Less than high school"))
+
+# Create race/ethnicity factor variable
+nhanes_homework <- nhanes_homework %>%
+  mutate(race_eth = case_when(RIDRETH1 == 1 ~ "Mexican American",
+                              RIDRETH1 == 2 ~ "Other Hispanic",
+                              RIDRETH1 == 3 ~ "Non-Hispanic White",
+                              RIDRETH1 == 4 ~ "Non-Hispanic Black",
+                              RIDRETH1 == 5 ~ "Other Race")) %>%
+  mutate(race_eth = relevel(factor(race_eth),
+                            ref = "Non-Hispanic White"))
+
+
+# Optional, relocate variable order in the dataset for future convenience
+colnames(nhanes_homework)
+nhanes_columns <-  c("SEQN", "RIAGENDR", "sex", "RIDAGEYR", "age_groups", "RIDRETH1", "race_eth",  "INDFMPIR", "DMDEDUC2", "education",       "SDMVSTRA", "SDMVPSU", "CFDDS", "MCI", "LBXCOT", "LBXBPB", "LBXBCD")    
+nhanes_homework <- relocate(nhanes_homework, all_of(nhanes_columns))
+head(nhanes_homework)
+```
+
+
+
+# 4. Save dataset
+
+```{r save_dataset}
+
+# Save dataset as an R object
+save(nhanes_homework, file = here("nhanes_homework.rda"))
+
+# Make sure you can load the dataset back into R
+load(file = here("nhanes_homework.rda"))
+
+# Check the class of object that was loaded
+class(nhanes_homework)
+```
+
+The homework dataset is a `r class(nhanes_homework)` class of object.

@@ -1,14 +1,12 @@
 ---
 title: "EPID674 Epidemiologic Data Analysis using R"
+subtitle: "Wrangling and Exploring Data with R"
 author: "Kelly Bakulski, Lauren Middleton"
 date: "Last compiled on `r format(Sys.Date(), '%B %d, %Y')`"
 output:
-  word_document:
-    toc: yes
   html_document:
     toc: yes
     toc_float: yes
-subtitle: Wrangling and Exploring Data with R
 ---
 
 ```{r setup, include=FALSE}
