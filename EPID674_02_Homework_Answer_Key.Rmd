@@ -186,7 +186,7 @@ nhanes_homework <- nhanes_homework %>%
   mutate(age_groups = relevel(factor(age_groups),
                             ref = "[60,65]"))
 ```
-The lowest age group represents participants ages `r `levels(nhanes_homework$age_groups)[1]`, which means greater than or equal to age 60 and less than or equal to age 65 years. 
+The lowest age group represents participants ages `r levels(nhanes_homework$age_groups)[1]`, which means greater than or equal to age 60 and less than or equal to age 65 years. 
 The number of participants in the lowest age group is `r table(nhanes_homework$age_groups, useNA = "always")[1]`. 
 
 
