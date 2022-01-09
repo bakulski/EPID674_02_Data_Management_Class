@@ -243,7 +243,7 @@ div.tocify {
 <h1 class="title toc-ignore">EPID674 Epidemiologic Data Analysis using R</h1>
 <h3 class="subtitle">Wrangling and Exploring Data with R</h3>
 <h4 class="author">Kelly Bakulski, Lauren Middleton</h4>
-<h4 class="date">Last compiled on December 12, 2021</h4>
+<h4 class="date">Last compiled on January 09, 2022</h4>
 
 </div>
 
@@ -268,9 +268,9 @@ install.packages(&quot;sjlabelled&quot;)
 library(tidyverse)</code></pre>
 <pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.1 ──</code></pre>
 <pre><code>## ✓ ggplot2 3.3.5     ✓ purrr   0.3.4
-## ✓ tibble  3.1.5     ✓ dplyr   1.0.7
+## ✓ tibble  3.1.6     ✓ dplyr   1.0.7
 ## ✓ tidyr   1.1.4     ✓ stringr 1.4.0
-## ✓ readr   2.0.2     ✓ forcats 0.5.1</code></pre>
+## ✓ readr   2.1.1     ✓ forcats 0.5.1</code></pre>
 <pre><code>## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 ## x dplyr::filter() masks stats::filter()
 ## x dplyr::lag()    masks stats::lag()</code></pre>
@@ -303,10 +303,10 @@ library(sjlabelled)</code></pre>
 <li>Load demographics, complete blood counts, and chemical datasets</li>
 <li>Check datasets</li>
 <li>Keep only the useful variables</li>
-<li>Merge datasets</li>
-<li>Update object types and set reference levels</li>
-<li>Create categorical variables</li>
-<li>Create age groups</li>
+<li>Join datasets together</li>
+<li>Create new numeric variables from numeric variables</li>
+<li>Create categorical variables from numeric variables</li>
+<li>Update object types and set reference levels for factor variables</li>
 <li>Save cleaned dataset</li>
 </ol>
 </div>
@@ -555,50 +555,6 @@ str(demog) # Get detailed information about each variable and the object overall
 ## 8  16848.020       1      134       15       15     4.90
 ## 9  12390.920       2      134       15       15     5.00
 ## 10 30336.654       2      147        4        4     0.76</code></pre>
-<pre class="r"><code># Look at the whole dataset
-head(demog)</code></pre>
-<pre><code>##    SEQN SDDSRVYR RIDSTATR RIAGENDR RIDAGEYR RIDAGEMN RIDRETH1 RIDRETH3 RIDEXMON
-## 1 93703       10        2        2        2       NA        5        6        2
-## 2 93704       10        2        1        2       NA        3        3        1
-## 3 93705       10        2        2       66       NA        4        4        2
-## 4 93706       10        2        1       18       NA        5        6        2
-## 5 93707       10        2        1       13       NA        5        7        2
-## 6 93708       10        2        2       66       NA        5        6        2
-##   RIDEXAGM DMQMILIZ DMQADFC DMDBORN4 DMDCITZN DMDYRSUS DMDEDUC3 DMDEDUC2
-## 1       27       NA      NA        1        1       NA       NA       NA
-## 2       33       NA      NA        1        1       NA       NA       NA
-## 3       NA        2      NA        1        1       NA       NA        2
-## 4      222        2      NA        1        1       NA       15       NA
-## 5      158       NA      NA        1        1       NA        6       NA
-## 6       NA        2      NA        2        1        7       NA        1
-##   DMDMARTL RIDEXPRG SIALANG SIAPROXY SIAINTRP FIALANG FIAPROXY FIAINTRP MIALANG
-## 1       NA       NA       1        1        2       1        2        2      NA
-## 2       NA       NA       1        1        2       1        2        2      NA
-## 3        3       NA       1        2        2       1        2        2       1
-## 4       NA       NA       1        2        2      NA       NA       NA       1
-## 5       NA       NA       1        1        2       1        2        2       1
-## 6        1       NA       1        2        1       1        2        2       1
-##   MIAPROXY MIAINTRP AIALANGA DMDHHSIZ DMDFMSIZ DMDHHSZA DMDHHSZB DMDHHSZE
-## 1       NA       NA       NA        5        5        3        0        0
-## 2       NA       NA       NA        4        4        2        0        0
-## 3        2        2        1        1        1        0        0        1
-## 4        2        2        1        5        5        0        0        1
-## 5        2        2        1        7        7        0        3        0
-## 6        2        1        3        2        2        0        0        2
-##   DMDHRGND DMDHRAGZ DMDHREDZ DMDHRMAZ DMDHSEDZ  WTINT2YR  WTMEC2YR SDMVPSU
-## 1        1        2        3        1        3  9246.492  8539.731       2
-## 2        1        2        3        1        2 37338.768 42566.615       1
-## 3        2        4        1        2       NA  8614.571  8338.420       2
-## 4        1        4        3        1        2  8548.633  8723.440       2
-## 5        1        3        2        1        3  6769.345  7064.610       1
-## 6        1        4        1        1        1 13329.451 14372.489       2
-##   SDMVSTRA INDHHIN2 INDFMIN2 INDFMPIR
-## 1      145       15       15     5.00
-## 2      143       15       15     5.00
-## 3      145        3        3     0.82
-## 4      134       NA       NA       NA
-## 5      138       10       10     1.88
-## 6      138        6        6     1.63</code></pre>
 </div>
 <div id="explore-individual-variables-in-the-nhanes-dataset" class="section level1">
 <h1>Explore individual variables in the NHANES dataset</h1>
@@ -736,8 +692,8 @@ dim(cotinine)</code></pre>
 <pre><code>## [1] 7936    5</code></pre>
 <pre class="r"><code>#7936    2</code></pre>
 </div>
-<div id="one-dataset-at-a-time-merge-all-datasets-with-the-demographics-dataset" class="section level1">
-<h1>One dataset at a time, merge all datasets with the demographics dataset</h1>
+<div id="one-dataset-at-a-time-join-all-datasets-with-the-demographics-dataset" class="section level1">
+<h1>One dataset at a time, join all datasets with the demographics dataset</h1>
 <pre class="r"><code># Merge the demographics and complete blood count datasets
 demog_cbc &lt;- left_join(demog_subset, cbc_subset, by = &quot;SEQN&quot;)
 # Check the merge - How many participants and variables do you expect?
@@ -880,9 +836,9 @@ str(demog_cbc_fe_as_cdpb)</code></pre>
 # Note, the variable label for SEQN in the cotinine dataset from NHANES has a different capitalization pattern, so R recognizes this as a different variable from the SEQN variable in all of the other datasets. Let&#39;s strip the label from that variable and then do the merge.
 demog_cbc_fe_as_cdpb &lt;- remove_label(demog_cbc_fe_as_cdpb, SEQN)
 cotinine_subset &lt;- remove_label(cotinine_subset, SEQN)
-demog_cbc_chems &lt;- left_join(demog_cbc_fe_as_cdpb, cotinine_subset, by = &quot;SEQN&quot;)
+nhanes &lt;- left_join(demog_cbc_fe_as_cdpb, cotinine_subset, by = &quot;SEQN&quot;)
 # Check the merge - How many participants and variables do you expect?
-str(demog_cbc_chems)</code></pre>
+str(nhanes)</code></pre>
 <pre><code>## &#39;data.frame&#39;:    9254 obs. of  18 variables:
 ##  $ SEQN    : int  93703 93704 93705 93706 93707 93708 93709 93710 93711 93712 ...
 ##  $ RIASEX  : &#39;labelled&#39; int  2 1 2 1 1 2 2 2 1 1 ...
@@ -919,183 +875,17 @@ str(demog_cbc_chems)</code></pre>
 ##   ..- attr(*, &quot;label&quot;)= chr &quot;Blood lead (ug/dL)&quot;
 ##  $ LBXCOT  : &#39;labelled&#39; num  NA NA 0.028 0.138 0.555 0.011 54.3 NA 0.057 13.4 ...
 ##   ..- attr(*, &quot;label&quot;)= chr &quot;Cotinine, Serum (ng/mL)&quot;</code></pre>
-<pre class="r"><code># This is our merged dataset!</code></pre>
-</div>
-<div id="convert-raceethnicity-and-sex-variables-from-numeric-to-factors" class="section level1">
-<h1>Convert race/ethnicity and sex variables from numeric to factors</h1>
-<pre class="r"><code># Check the initial counts of race/ethnicity and sex
-table(demog_cbc_chems$RIDRETH1)</code></pre>
-<pre><code>## 
-##    1    2    3    4    5 
-## 1367  820 3150 2115 1802</code></pre>
-<pre class="r"><code>table(demog_cbc_chems$RIASEX)</code></pre>
-<pre><code>## 
-##    1    2 
-## 4557 4697</code></pre>
-<pre class="r"><code># Check the initial data type of the variables
-str(demog_cbc_chems$RIDRETH1)</code></pre>
-<pre><code>##  &#39;labelled&#39; int [1:9254] 5 3 4 5 5 5 4 3 5 1 ...
-##  - attr(*, &quot;label&quot;)= chr &quot;Race/Hispanic origin&quot;</code></pre>
-<pre class="r"><code>str(demog_cbc_chems$RIASEX)</code></pre>
-<pre><code>##  &#39;labelled&#39; int [1:9254] 2 1 2 1 1 2 2 2 1 1 ...
-##  - attr(*, &quot;label&quot;)= chr &quot;Gender&quot;</code></pre>
-<pre class="r"><code># Update race/ethnicity and sex from numbers to characters
-nhanes_factor &lt;- demog_cbc_chems %&gt;%
-  mutate(race_eth = case_when(RIDRETH1 == 1 ~ &quot;Mexican American&quot;,
-                              RIDRETH1 == 2 ~ &quot;Other Hispanic&quot;,
-                              RIDRETH1 == 3 ~ &quot;Non-Hispanic White&quot;,
-                              RIDRETH1 == 4 ~ &quot;Non-Hispanic Black&quot;,
-                              RIDRETH1 == 5 ~ &quot;Other Race&quot;),
-         sex = case_when(RIASEX == 1 ~ &quot;Male&quot;,
-                         RIASEX == 2 ~ &quot;Female&quot;)) %&gt;%
-  mutate(sex = factor(sex),               #change the character variables into factor variables
-         race_eth = factor(race_eth)) %&gt;%
-  mutate(sex = relevel(sex,               #set the reference levels
-                       ref = &quot;Male&quot;),
-         race_eth = relevel(race_eth,
-                            ref = &quot;Non-Hispanic White&quot;)) 
-# Check the counts of the new variables
-table(nhanes_factor$race_eth)</code></pre>
-<pre><code>## 
-## Non-Hispanic White   Mexican American Non-Hispanic Black     Other Hispanic 
-##               3150               1367               2115                820 
-##         Other Race 
-##               1802</code></pre>
-<pre class="r"><code>table(nhanes_factor$sex)</code></pre>
-<pre><code>## 
-##   Male Female 
-##   4557   4697</code></pre>
-<pre class="r"><code># Do the counts still match?
-
-# Check the data type of the new variables
-str(nhanes_factor$race_eth)</code></pre>
-<pre><code>##  Factor w/ 5 levels &quot;Non-Hispanic White&quot;,..: 5 1 3 5 5 5 3 1 5 2 ...</code></pre>
-<pre class="r"><code>str(nhanes_factor$sex)</code></pre>
-<pre><code>##  Factor w/ 2 levels &quot;Male&quot;,&quot;Female&quot;: 2 1 2 1 1 2 2 2 1 1 ...</code></pre>
-</div>
-<div id="clean-and-convert-the-education-variables-from-numeric-to-factors" class="section level1">
-<h1>Clean and convert the education variables from numeric to factors</h1>
-<ul>
-<li><strong><a href="https://wwwn.cdc.gov/Nchs/Nhanes/2017-2018/DEMO_J.htm" class="uri">https://wwwn.cdc.gov/Nchs/Nhanes/2017-2018/DEMO_J.htm</a></strong></li>
-</ul>
-<pre class="r"><code># DMDEDUC3 - participants 6 - 19 years old
-# DMDEDUC2 - participants 20+ years old
-
-# Check original counts of DMDEDUC3
-table(nhanes_factor$RIDAGEYR &lt; 20, useNA = &quot;always&quot;) #3685 participants under 20</code></pre>
-<pre><code>## 
-## FALSE  TRUE  &lt;NA&gt; 
-##  5569  3685     0</code></pre>
-<pre class="r"><code>table(nhanes_factor$DMDEDUC3, useNA = &quot;always&quot;) #values 0-15 and 66</code></pre>
-<pre><code>## 
-##    0    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15 
-##  184  176  202  202  179  199  154  151  154  154  139  155   20  150    5   71 
-##   66 &lt;NA&gt; 
-##   11 6948</code></pre>
-<pre class="r"><code>table(nhanes_factor$DMDEDUC3 &gt;= 0, useNA = &quot;always&quot;) #2306 participants with education reported</code></pre>
-<pre><code>## 
-## TRUE &lt;NA&gt; 
-## 2306 6948</code></pre>
-<pre class="r"><code># Check original counts of DMDEDUC2
-table(nhanes_factor$RIDAGEYR &gt;= 20, useNA = &quot;always&quot;) #5569 participants 20+ years</code></pre>
-<pre><code>## 
-## FALSE  TRUE  &lt;NA&gt; 
-##  3685  5569     0</code></pre>
-<pre class="r"><code>table(nhanes_factor$DMDEDUC2, useNA = &quot;always&quot;) #values 1-5, 7, 9</code></pre>
-<pre><code>## 
-##    1    2    3    4    5    7    9 &lt;NA&gt; 
-##  479  638 1325 1778 1336    2   11 3685</code></pre>
-<pre class="r"><code>table(nhanes_factor$DMDEDUC2 &gt;= 0, useNA = &quot;always&quot;) #5569 participants with data (13 with 7 or 9)</code></pre>
-<pre><code>## 
-## TRUE &lt;NA&gt; 
-## 5569 3685</code></pre>
-<pre class="r"><code># Update the numeric codes to categories
-nhanes_educ2_3 &lt;- nhanes_factor %&gt;%
-  mutate(education_youth = case_when(DMDEDUC3 &gt;= 0 &amp; DMDEDUC3 &lt;= 5 ~ &quot;Less than 5th grade&quot;,
-                                DMDEDUC3 &gt;= 6 &amp; DMDEDUC3 &lt;= 12 | DMDEDUC3 == 66 ~ &quot;Less than high school&quot;,
-                                DMDEDUC3 == 13 | DMDEDUC3 == 14 ~ &quot;High school or GED&quot;,
-                                DMDEDUC3 == 15 ~ &quot;More than high school&quot;)) %&gt;%
-  mutate(education_adult = case_when(DMDEDUC2 == 1 | DMDEDUC2 == 2 ~ &quot;Less than high school&quot;,
-                                 DMDEDUC2 == 3 ~ &quot;High school or GED&quot;,
-                                 DMDEDUC2 == 4 | DMDEDUC2 == 5 ~ &quot;More than high school&quot;,
-                                 DMDEDUC2 == 7 | DMDEDUC2 == 9 ~ &quot;Unknown&quot;)) %&gt;%
-  mutate(education_adult = na_if(education_adult, &quot;Unknown&quot;)) #Make all the &quot;Unknown&quot; values missing
-
-# Check the counts
-table(nhanes_educ2_3$education_youth, useNA = &quot;always&quot;)</code></pre>
-<pre><code>## 
-##    High school or GED   Less than 5th grade Less than high school 
-##                   155                  1142                   938 
-## More than high school                  &lt;NA&gt; 
-##                    71                  6948</code></pre>
-<pre class="r"><code>table(nhanes_educ2_3$education_adult, useNA = &quot;always&quot;)</code></pre>
-<pre><code>## 
-##    High school or GED Less than high school More than high school 
-##                  1325                  1117                  3114 
-##                  &lt;NA&gt; 
-##                  3698</code></pre>
-<pre class="r"><code># Merge the two education variables
-nhanes_educ &lt;- nhanes_educ2_3 %&gt;%
-  mutate(education = coalesce(education_youth,
-                              education_adult))
-
-# View the last three columns in the dataset
-head(nhanes_educ)</code></pre>
-<pre><code>##    SEQN RIASEX RIDAGEYR RIDRETH1 INDFMPIR DMDEDUC3 DMDEDUC2 SDMVSTRA SDMVPSU
-## 1 93703      2        2        5     5.00       NA       NA      145       2
-## 2 93704      1        2        3     5.00       NA       NA      143       1
-## 3 93705      2       66        4     0.82       NA        2      145       2
-## 4 93706      1       18        5       NA       15       NA      134       2
-## 5 93707      1       13        5     1.88        6       NA      138       1
-## 6 93708      2       66        5     1.63       NA        1      138       2
-##   LBXRBCSI LBXWBCSI LBDLYMNO LBDNENO LBXIRN URXUAS LBXBCD LBXBPB LBXCOT
-## 1       NA       NA       NA      NA     NA     NA     NA     NA     NA
-## 2     4.25      7.4      3.5     3.2     NA     NA   0.07     NA     NA
-## 3     5.48      8.6      3.4     4.2     92     NA   0.24   2.98  0.028
-## 4     5.24      6.1      1.5     3.7    164     NA   0.21   0.74  0.138
-## 5     5.02     11.2      4.2     6.1     91   5.09   0.14   0.39  0.555
-## 6     4.59      6.0      1.9     3.6     90  24.07   0.73   1.53  0.011
-##             race_eth    sex       education_youth       education_adult
-## 1         Other Race Female                  &lt;NA&gt;                  &lt;NA&gt;
-## 2 Non-Hispanic White   Male                  &lt;NA&gt;                  &lt;NA&gt;
-## 3 Non-Hispanic Black Female                  &lt;NA&gt; Less than high school
-## 4         Other Race   Male More than high school                  &lt;NA&gt;
-## 5         Other Race   Male Less than high school                  &lt;NA&gt;
-## 6         Other Race Female                  &lt;NA&gt; Less than high school
-##               education
-## 1                  &lt;NA&gt;
-## 2                  &lt;NA&gt;
-## 3 Less than high school
-## 4 More than high school
-## 5 Less than high school
-## 6 Less than high school</code></pre>
-<pre class="r"><code># Set the factor levels and reference for education, reorder the columns
-nhanes_educ &lt;- nhanes_educ %&gt;%
-  mutate(education = relevel(factor(education,
-                                    levels = c(&quot;Less than 5th grade&quot;,
-                                               &quot;Less than high school&quot;,
-                                               &quot;High school or GED&quot;,
-                                               &quot;More than high school&quot;)),
-                             ref = &quot;Less than high school&quot;))
-
-# Check the counts
-table(nhanes_educ$education, useNA = &quot;always&quot;)</code></pre>
-<pre><code>## 
-## Less than high school   Less than 5th grade    High school or GED 
-##                  2055                  1142                  1480 
-## More than high school                  &lt;NA&gt; 
-##                  3185                  1392</code></pre>
-<pre class="r"><code># Note: setting a reference automatically makes the reference the first level</code></pre>
+<pre class="r"><code># This is our joined dataset!</code></pre>
 </div>
 <div id="create-a-new-continuous-variable-from-other-continuous-variables" class="section level1">
 <h1>Create a new continuous variable from other continuous variables</h1>
 <pre class="r"><code># Create a neutrophil:lymphocyte ratio variable (NLR)
-nhanes_nlr &lt;- nhanes_educ %&gt;%
+nhanes &lt;- nhanes %&gt;%
   mutate(nlr = LBDNENO / LBDLYMNO) 
 
 
 # View the new variable to look at the changes
-nhanes_nlr %&gt;%
+nhanes %&gt;%
   select(SEQN,
          LBDNENO,
          LBDLYMNO,
@@ -1111,76 +901,46 @@ nhanes_nlr %&gt;%
 </div>
 <div id="create-a-categorical-variable-from-a-continuous-variable" class="section level1">
 <h1>Create a categorical variable from a continuous variable</h1>
+<pre class="r"><code> # How many participants do you expect in each of the iron status groups?
+sum(nhanes$LBXIRN &lt; 60, na.rm = TRUE)</code></pre>
+<pre><code>## [1] 1376</code></pre>
+<pre class="r"><code>sum(nhanes$LBXIRN &gt;= 60 &amp; nhanes$LBXIRN &lt;= 170, na.rm = TRUE)</code></pre>
+<pre><code>## [1] 4404</code></pre>
+<pre class="r"><code>sum(nhanes$LBXIRN &gt; 170, na.rm = TRUE)</code></pre>
+<pre><code>## [1] 142</code></pre>
 <pre class="r"><code># Create a categorical variable of iron status based on serum concentrations
-nhanes_iron_categ &lt;- nhanes_nlr %&gt;%
+nhanes &lt;- nhanes %&gt;%
   mutate(iron_status = case_when(LBXIRN &lt; 60 ~ &quot;Deficient&quot;,
                                  LBXIRN &gt; 170 ~ &quot;Excessive&quot;,
                                  LBXIRN &gt;= 60 &amp; LBXIRN &lt;= 170 ~ &quot;Normal&quot;)) %&gt;%
   mutate(iron_status = relevel(factor(iron_status),
                                ref = &quot;Deficient&quot;))
 
-# Check the structure of the dataset to see that iron_status is after LBXIRN and it is a factor with reference = &quot;Deficient&quot;
-str(nhanes_iron_categ)</code></pre>
-<pre><code>## &#39;data.frame&#39;:    9254 obs. of  25 variables:
-##  $ SEQN           : int  93703 93704 93705 93706 93707 93708 93709 93710 93711 93712 ...
-##  $ RIASEX         : &#39;labelled&#39; int  2 1 2 1 1 2 2 2 1 1 ...
-##   ..- attr(*, &quot;label&quot;)= chr &quot;Gender&quot;
-##  $ RIDAGEYR       : &#39;labelled&#39; int  2 2 66 18 13 66 75 0 56 18 ...
-##   ..- attr(*, &quot;label&quot;)= chr &quot;Age in years at screening&quot;
-##  $ RIDRETH1       : &#39;labelled&#39; int  5 3 4 5 5 5 4 3 5 1 ...
-##   ..- attr(*, &quot;label&quot;)= chr &quot;Race/Hispanic origin&quot;
-##  $ INDFMPIR       : &#39;labelled&#39; num  5 5 0.82 NA 1.88 1.63 0.41 4.9 5 0.76 ...
-##   ..- attr(*, &quot;label&quot;)= chr &quot;Ratio of family income to poverty&quot;
-##  $ DMDEDUC3       : &#39;labelled&#39; int  NA NA NA 15 6 NA NA NA NA 12 ...
-##   ..- attr(*, &quot;label&quot;)= chr &quot;Education level - Children/Youth 6-19&quot;
-##  $ DMDEDUC2       : &#39;labelled&#39; int  NA NA 2 NA NA 1 4 NA 5 NA ...
-##   ..- attr(*, &quot;label&quot;)= chr &quot;Education level - Adults 20+&quot;
-##  $ SDMVSTRA       : &#39;labelled&#39; int  145 143 145 134 138 138 136 134 134 147 ...
-##   ..- attr(*, &quot;label&quot;)= chr &quot;Masked variance pseudo-stratum&quot;
-##  $ SDMVPSU        : &#39;labelled&#39; int  2 1 2 2 1 2 1 1 2 2 ...
-##   ..- attr(*, &quot;label&quot;)= chr &quot;Masked variance pseudo-PSU&quot;
-##  $ LBXRBCSI       : &#39;labelled&#39; num  NA 4.25 5.48 5.24 5.02 4.59 5.13 NA 4.65 5.12 ...
-##   ..- attr(*, &quot;label&quot;)= chr &quot;Red blood cell count (million cells/uL)&quot;
-##  $ LBXWBCSI       : &#39;labelled&#39; num  NA 7.4 8.6 6.1 11.2 6 7.2 NA 5 7.1 ...
-##   ..- attr(*, &quot;label&quot;)= chr &quot;White blood cell count (1000 cells/uL)&quot;
-##  $ LBDLYMNO       : &#39;labelled&#39; num  NA 3.5 3.4 1.5 4.2 1.9 1.9 NA 1.8 2.2 ...
-##   ..- attr(*, &quot;label&quot;)= chr &quot;Lymphocyte number (1000 cells/uL)&quot;
-##  $ LBDNENO        : &#39;labelled&#39; num  NA 3.2 4.2 3.7 6.1 3.6 4.8 NA 2.7 4.2 ...
-##   ..- attr(*, &quot;label&quot;)= chr &quot;Segmented neutrophils num (1000 cell/uL)&quot;
-##  $ LBXIRN         : &#39;labelled&#39; int  NA NA 92 164 91 90 63 NA 56 225 ...
-##   ..- attr(*, &quot;label&quot;)= chr &quot;Iron frozen, Serum (ug/dL)&quot;
-##  $ URXUAS         : &#39;labelled&#39; num  NA NA NA NA 5.09 ...
-##   ..- attr(*, &quot;label&quot;)= chr &quot;Arsenic, Total - Urine (ug/L)&quot;
-##  $ LBXBCD         : &#39;labelled&#39; num  NA 0.07 0.24 0.21 0.14 0.73 1.08 NA 0.38 0.26 ...
-##   ..- attr(*, &quot;label&quot;)= chr &quot;Blood cadmium (ug/L)&quot;
-##  $ LBXBPB         : &#39;labelled&#39; num  NA NA 2.98 0.74 0.39 1.53 1.31 NA 2.15 0.27 ...
-##   ..- attr(*, &quot;label&quot;)= chr &quot;Blood lead (ug/dL)&quot;
-##  $ LBXCOT         : &#39;labelled&#39; num  NA NA 0.028 0.138 0.555 0.011 54.3 NA 0.057 13.4 ...
-##   ..- attr(*, &quot;label&quot;)= chr &quot;Cotinine, Serum (ng/mL)&quot;
-##  $ race_eth       : Factor w/ 5 levels &quot;Non-Hispanic White&quot;,..: 5 1 3 5 5 5 3 1 5 2 ...
-##  $ sex            : Factor w/ 2 levels &quot;Male&quot;,&quot;Female&quot;: 2 1 2 1 1 2 2 2 1 1 ...
-##  $ education_youth: chr  NA NA NA &quot;More than high school&quot; ...
-##  $ education_adult: chr  NA NA &quot;Less than high school&quot; NA ...
-##  $ education      : Factor w/ 4 levels &quot;Less than high school&quot;,..: NA NA 1 4 1 1 4 NA 4 1 ...
-##  $ nlr            : &#39;labelled&#39; num  NA 0.914 1.235 2.467 1.452 ...
-##   ..- attr(*, &quot;label&quot;)= chr &quot;Segmented neutrophils num (1000 cell/uL)&quot;
-##  $ iron_status    : Factor w/ 3 levels &quot;Deficient&quot;,&quot;Excessive&quot;,..: NA NA 3 3 3 3 3 NA 1 2 ...</code></pre>
+table(nhanes$iron_status) # How many participants did you get in each group?</code></pre>
+<pre><code>## 
+## Deficient Excessive    Normal 
+##      1376       142      4404</code></pre>
+<pre class="r"><code># Check the structure of the dataset to see that iron_status is after LBXIRN and it is a factor with reference = &quot;Deficient&quot;
+str(nhanes$iron_status)</code></pre>
+<pre><code>##  Factor w/ 3 levels &quot;Deficient&quot;,&quot;Excessive&quot;,..: NA NA 3 3 3 3 3 NA 1 2 ...</code></pre>
 </div>
 <div id="use-the-cut-function-to-slice-a-numeric-variable-into-groups" class="section level1">
 <h1>Use the cut function to slice a numeric variable into groups</h1>
 <pre class="r"><code># Make groups of equal range
-nhanes_dataset &lt;- nhanes_iron_categ %&gt;%
+nhanes &lt;- nhanes %&gt;%
   mutate(age_groups = cut_interval(RIDAGEYR, n = 5)) 
-table(nhanes_dataset$age_groups)</code></pre>
+
+table(nhanes$age_groups) # How many participants did you get in each group?</code></pre>
 <pre><code>## 
 ##  [0,16] (16,32] (32,48] (48,64] (64,80] 
 ##    3250    1519    1349    1636    1500</code></pre>
 <pre class="r"><code># Other options:
 
 # Five groups with approximately equal numbers of participants (cut_number())
-nhanes_age &lt;- nhanes_iron_categ %&gt;%
+nhanes &lt;- nhanes %&gt;%
   mutate(cut_groups = cut_number(RIDAGEYR, n = 5))
-table(nhanes_age$cut_groups)</code></pre>
+
+table(nhanes$cut_groups) # How many participants did you get in each group?</code></pre>
 <pre><code>## 
 ##   [0,8]  (8,20] (20,42] (42,62] (62,80] 
 ##    1904    1857    1868    1884    1741</code></pre>
@@ -1189,12 +949,172 @@ table(nhanes_age$cut_groups)</code></pre>
 <h1>Check your understanding!</h1>
 <p>Serum cotinine is a continuous variable in our dataset. Let’s use it to create a two-level categorical variable for nonsmoking versus smoking. Nonsmoking status can be defined as serum cotinine values less than or equal to 10 ng/mL (Pirkle et al., 1996). * Make a new R code chunk * Make a new factor variable for smoking status * The variable should have the level “smoking” for cotinine greater than 10 * The variable should have the level “nonsmoking” for cotinine less than or equal to 10 * How many observations are in the nonsmoking category? In the smoking category?</p>
 </div>
+<div id="convert-sex-and-raceethnicity-variables-from-numeric-to-factors" class="section level1">
+<h1>Convert sex and race/ethnicity variables from numeric to factors</h1>
+<pre class="r"><code># Update sex variable
+# Check initial counts and data type
+table(nhanes$RIASEX)</code></pre>
+<pre><code>## 
+##    1    2 
+## 4557 4697</code></pre>
+<pre class="r"><code>str(nhanes$RIASEX)</code></pre>
+<pre><code>##  &#39;labelled&#39; int [1:9254] 2 1 2 1 1 2 2 2 1 1 ...
+##  - attr(*, &quot;label&quot;)= chr &quot;Gender&quot;</code></pre>
+<pre class="r"><code># Update sex from numbers to characters
+nhanes &lt;- nhanes %&gt;%
+  mutate(sex = case_when(RIASEX == 1 ~ &quot;Male&quot;,
+                         RIASEX == 2 ~ &quot;Female&quot;)) %&gt;%
+  mutate(sex = factor(sex))   %&gt;%         #change the character variables into factor variables
+  mutate(sex = relevel(sex,               #set the reference levels
+                       ref = &quot;Male&quot;))
+
+# Check the count and data type of the new variable
+table(nhanes$sex)</code></pre>
+<pre><code>## 
+##   Male Female 
+##   4557   4697</code></pre>
+<pre class="r"><code>str(nhanes$sex)</code></pre>
+<pre><code>##  Factor w/ 2 levels &quot;Male&quot;,&quot;Female&quot;: 2 1 2 1 1 2 2 2 1 1 ...</code></pre>
+<pre class="r"><code># Do the counts still match?
+
+
+# Update race/ethnicity variable
+# Check the initial counts and data type
+table(nhanes$RIDRETH1)</code></pre>
+<pre><code>## 
+##    1    2    3    4    5 
+## 1367  820 3150 2115 1802</code></pre>
+<pre class="r"><code>str(nhanes$RIDRETH1)</code></pre>
+<pre><code>##  &#39;labelled&#39; int [1:9254] 5 3 4 5 5 5 4 3 5 1 ...
+##  - attr(*, &quot;label&quot;)= chr &quot;Race/Hispanic origin&quot;</code></pre>
+<pre class="r"><code># Update race/ethnicity from numbers to characters
+nhanes &lt;- nhanes %&gt;%
+  mutate(race_eth = case_when(RIDRETH1 == 1 ~ &quot;Mexican American&quot;,
+                              RIDRETH1 == 2 ~ &quot;Other Hispanic&quot;,
+                              RIDRETH1 == 3 ~ &quot;Non-Hispanic White&quot;,
+                              RIDRETH1 == 4 ~ &quot;Non-Hispanic Black&quot;,
+                              RIDRETH1 == 5 ~ &quot;Other Race&quot;)) %&gt;%
+  mutate(race_eth = factor(race_eth)) %&gt;% #change the character variables into factor variables
+  mutate(race_eth = relevel(race_eth, #set the reference levels
+                            ref = &quot;Non-Hispanic White&quot;)) 
+
+# Check the count and data type of the new variable
+table(nhanes$race_eth)</code></pre>
+<pre><code>## 
+## Non-Hispanic White   Mexican American Non-Hispanic Black     Other Hispanic 
+##               3150               1367               2115                820 
+##         Other Race 
+##               1802</code></pre>
+<pre class="r"><code>str(nhanes$race_eth)</code></pre>
+<pre><code>##  Factor w/ 5 levels &quot;Non-Hispanic White&quot;,..: 5 1 3 5 5 5 3 1 5 2 ...</code></pre>
+<pre class="r"><code># Do the counts still match?</code></pre>
+</div>
+<div id="clean-and-convert-the-education-variables-from-numeric-to-factors" class="section level1">
+<h1>Clean and convert the education variables from numeric to factors</h1>
+<ul>
+<li><strong><a href="https://wwwn.cdc.gov/Nchs/Nhanes/2017-2018/DEMO_J.htm" class="uri">https://wwwn.cdc.gov/Nchs/Nhanes/2017-2018/DEMO_J.htm</a></strong></li>
+</ul>
+<pre class="r"><code># Education variable for youth 
+# DMDEDUC3 - participants 6 - 19 years old
+# Check original counts of DMDEDUC3
+table(nhanes$RIDAGEYR &lt; 20, useNA = &quot;always&quot;) #3685 participants under 20</code></pre>
+<pre><code>## 
+## FALSE  TRUE  &lt;NA&gt; 
+##  5569  3685     0</code></pre>
+<pre class="r"><code>table(nhanes$DMDEDUC3, useNA = &quot;always&quot;) #values 0-15 and 66</code></pre>
+<pre><code>## 
+##    0    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15 
+##  184  176  202  202  179  199  154  151  154  154  139  155   20  150    5   71 
+##   66 &lt;NA&gt; 
+##   11 6948</code></pre>
+<pre class="r"><code>table(nhanes$DMDEDUC3 &gt;= 0, useNA = &quot;always&quot;) #2306 youth participants with education reported</code></pre>
+<pre><code>## 
+## TRUE &lt;NA&gt; 
+## 2306 6948</code></pre>
+<pre class="r"><code># Update the numeric codes to categories
+nhanes &lt;- nhanes %&gt;%
+  mutate(education_youth = case_when(DMDEDUC3 &gt;= 0 &amp; DMDEDUC3 &lt;= 5 ~ &quot;Less than 5th grade&quot;,
+                                DMDEDUC3 &gt;= 6 &amp; DMDEDUC3 &lt;= 12 | DMDEDUC3 == 66 ~ &quot;Less than high school&quot;,
+                                DMDEDUC3 == 13 | DMDEDUC3 == 14 ~ &quot;High school or GED&quot;,
+                                DMDEDUC3 == 15 ~ &quot;More than high school&quot;)) 
+  
+# Check the counts
+table(nhanes$education_youth, useNA = &quot;always&quot;)</code></pre>
+<pre><code>## 
+##    High school or GED   Less than 5th grade Less than high school 
+##                   155                  1142                   938 
+## More than high school                  &lt;NA&gt; 
+##                    71                  6948</code></pre>
+<pre class="r"><code># Education variable for adults
+# DMDEDUC2 - participants 20+ years old
+# Check original counts of DMDEDUC2
+table(nhanes$RIDAGEYR &gt;= 20, useNA = &quot;always&quot;) #5569 participants 20+ years</code></pre>
+<pre><code>## 
+## FALSE  TRUE  &lt;NA&gt; 
+##  3685  5569     0</code></pre>
+<pre class="r"><code>table(nhanes$DMDEDUC2, useNA = &quot;always&quot;) #values 1-5, 7, 9</code></pre>
+<pre><code>## 
+##    1    2    3    4    5    7    9 &lt;NA&gt; 
+##  479  638 1325 1778 1336    2   11 3685</code></pre>
+<pre class="r"><code>table(nhanes$DMDEDUC2 &gt;= 0, useNA = &quot;always&quot;) #5569 adult participants with education data (13 with 7 or 9)</code></pre>
+<pre><code>## 
+## TRUE &lt;NA&gt; 
+## 5569 3685</code></pre>
+<pre class="r"><code># Update the numeric codes to categories
+nhanes &lt;- nhanes %&gt;%
+  mutate(education_adult = case_when(DMDEDUC2 == 1 | DMDEDUC2 == 2 ~ &quot;Less than high school&quot;,
+                                 DMDEDUC2 == 3 ~ &quot;High school or GED&quot;,
+                                 DMDEDUC2 == 4 | DMDEDUC2 == 5 ~ &quot;More than high school&quot;,
+                                 DMDEDUC2 == 7 | DMDEDUC2 == 9 ~ &quot;Unknown&quot;)) %&gt;%
+  mutate(education_adult = na_if(education_adult, &quot;Unknown&quot;)) #Make all the &quot;Unknown&quot; values missing
+
+# Check the counts
+table(nhanes$education_adult, useNA = &quot;always&quot;)</code></pre>
+<pre><code>## 
+##    High school or GED Less than high school More than high school 
+##                  1325                  1117                  3114 
+##                  &lt;NA&gt; 
+##                  3698</code></pre>
+<pre class="r"><code># Combine the two education variables
+nhanes &lt;- nhanes %&gt;%
+  mutate(education = coalesce(education_youth,
+                              education_adult)) %&gt;%
+  # Set the factor levels and reference for education, reorder the columns
+  mutate(education = relevel(factor(education, 
+                                    levels = c(&quot;Less than 5th grade&quot;,
+                                               &quot;Less than high school&quot;,
+                                               &quot;High school or GED&quot;,
+                                               &quot;More than high school&quot;)),
+                             ref = &quot;Less than high school&quot;))
+
+# View the new columns
+nhanes %&gt;% 
+  select(education_youth,
+         education_adult,
+         education) %&gt;%
+  head()</code></pre>
+<pre><code>##         education_youth       education_adult             education
+## 1                  &lt;NA&gt;                  &lt;NA&gt;                  &lt;NA&gt;
+## 2                  &lt;NA&gt;                  &lt;NA&gt;                  &lt;NA&gt;
+## 3                  &lt;NA&gt; Less than high school Less than high school
+## 4 More than high school                  &lt;NA&gt; More than high school
+## 5 Less than high school                  &lt;NA&gt; Less than high school
+## 6                  &lt;NA&gt; Less than high school Less than high school</code></pre>
+<pre class="r"><code># Check the counts
+table(nhanes$education, useNA = &quot;always&quot;)</code></pre>
+<pre><code>## 
+## Less than high school   Less than 5th grade    High school or GED 
+##                  2055                  1142                  1480 
+## More than high school                  &lt;NA&gt; 
+##                  3185                  1392</code></pre>
+<pre class="r"><code># Note: setting a reference automatically makes the reference the first level</code></pre>
+</div>
 <div id="save-dataset-for-the-future" class="section level1">
 <h1>Save dataset for the future</h1>
 <pre class="r"><code># Reorder the variable names for next time
-nhanes_col &lt;-  c(&quot;SEQN&quot;, &quot;RIASEX&quot;, &quot;sex&quot;, &quot;RIDAGEYR&quot;, &quot;age_groups&quot;, &quot;RIDRETH1&quot;, &quot;race_eth&quot;,  &quot;INDFMPIR&quot;, &quot;DMDEDUC3&quot;, &quot;DMDEDUC2&quot;, &quot;education_youth&quot;, &quot;education_adult&quot;, &quot;education&quot;,       &quot;SDMVSTRA&quot;, &quot;SDMVPSU&quot;, &quot;LBXRBCSI&quot;, &quot;LBXWBCSI&quot;, &quot;LBDLYMNO&quot;, &quot;LBDNENO&quot;, &quot;nlr&quot;, &quot;LBXIRN&quot;, &quot;iron_status&quot;, &quot;URXUAS&quot;, &quot;LBXBCD&quot;, &quot;LBXBPB&quot;, &quot;LBXCOT&quot;)
-nhanes_dataset &lt;- relocate(nhanes_dataset, all_of(nhanes_col))
-head(nhanes_dataset)</code></pre>
+nhanes_col &lt;-  c(&quot;SEQN&quot;, &quot;RIASEX&quot;, &quot;sex&quot;, &quot;RIDAGEYR&quot;, &quot;age_groups&quot;, &quot;RIDRETH1&quot;, &quot;race_eth&quot;,  &quot;INDFMPIR&quot;, &quot;DMDEDUC3&quot;, &quot;DMDEDUC2&quot;, &quot;education_youth&quot;, &quot;education_adult&quot;, &quot;education&quot;, &quot;SDMVSTRA&quot;, &quot;SDMVPSU&quot;, &quot;LBXRBCSI&quot;, &quot;LBXWBCSI&quot;, &quot;LBDLYMNO&quot;, &quot;LBDNENO&quot;, &quot;nlr&quot;, &quot;LBXIRN&quot;, &quot;iron_status&quot;, &quot;URXUAS&quot;, &quot;LBXBCD&quot;, &quot;LBXBPB&quot;, &quot;LBXCOT&quot;)
+nhanes &lt;- relocate(nhanes, all_of(nhanes_col))
+head(nhanes)</code></pre>
 <pre><code>##    SEQN RIASEX    sex RIDAGEYR age_groups RIDRETH1           race_eth INDFMPIR
 ## 1 93703      2 Female        2     [0,16]        5         Other Race     5.00
 ## 2 93704      1   Male        2     [0,16]        3 Non-Hispanic White     5.00
@@ -1216,30 +1136,30 @@ head(nhanes_dataset)</code></pre>
 ## 4 More than high school      134       2     5.24      6.1      1.5     3.7
 ## 5 Less than high school      138       1     5.02     11.2      4.2     6.1
 ## 6 Less than high school      138       2     4.59      6.0      1.9     3.6
-##         nlr LBXIRN iron_status URXUAS LBXBCD LBXBPB LBXCOT
-## 1        NA     NA        &lt;NA&gt;     NA     NA     NA     NA
-## 2 0.9142857     NA        &lt;NA&gt;     NA   0.07     NA     NA
-## 3 1.2352941     92      Normal     NA   0.24   2.98  0.028
-## 4 2.4666667    164      Normal     NA   0.21   0.74  0.138
-## 5 1.4523810     91      Normal   5.09   0.14   0.39  0.555
-## 6 1.8947368     90      Normal  24.07   0.73   1.53  0.011</code></pre>
+##         nlr LBXIRN iron_status URXUAS LBXBCD LBXBPB LBXCOT cut_groups
+## 1        NA     NA        &lt;NA&gt;     NA     NA     NA     NA      [0,8]
+## 2 0.9142857     NA        &lt;NA&gt;     NA   0.07     NA     NA      [0,8]
+## 3 1.2352941     92      Normal     NA   0.24   2.98  0.028    (62,80]
+## 4 2.4666667    164      Normal     NA   0.21   0.74  0.138     (8,20]
+## 5 1.4523810     91      Normal   5.09   0.14   0.39  0.555     (8,20]
+## 6 1.8947368     90      Normal  24.07   0.73   1.53  0.011    (62,80]</code></pre>
 <pre class="r"><code># Save dataset as a csv file
-write_csv(nhanes_dataset, file = here(&quot;nhanes_dataset.csv&quot;))
+write_csv(nhanes, file = here(&quot;nhanes_class_dataset.csv&quot;))
 # Save dataset as an R object
-save(nhanes_dataset, file = here(&quot;nhanes_dataset.rda&quot;))
+save(nhanes, file = here(&quot;nhanes_class_dataset.rda&quot;))
 
 # Import dataset back into R from the csv or R object
 # Only R object keeps the preset factor variables saved
-nhanes_dataset_csv &lt;- read_csv(here((&quot;nhanes_dataset.csv&quot;)))</code></pre>
-<pre><code>## Rows: 9254 Columns: 26</code></pre>
+nhanes_csv &lt;- read_csv(here((&quot;nhanes_class_dataset.csv&quot;)))</code></pre>
+<pre><code>## Rows: 9254 Columns: 27</code></pre>
 <pre><code>## ── Column specification ────────────────────────────────────────────────────────
 ## Delimiter: &quot;,&quot;
-## chr  (7): sex, age_groups, race_eth, education_youth, education_adult, educa...
+## chr  (8): sex, age_groups, race_eth, education_youth, education_adult, educa...
 ## dbl (19): SEQN, RIASEX, RIDAGEYR, RIDRETH1, INDFMPIR, DMDEDUC3, DMDEDUC2, SD...</code></pre>
 <pre><code>## 
 ## ℹ Use `spec()` to retrieve the full column specification for this data.
 ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-<pre class="r"><code>load(here((&quot;nhanes_dataset.rda&quot;)))</code></pre>
+<pre class="r"><code>load(here((&quot;nhanes_class_dataset.rda&quot;)))</code></pre>
 </div>
 <div id="remember-to-save-your-r-script" class="section level1">
 <h1>Remember to save your R script!</h1>

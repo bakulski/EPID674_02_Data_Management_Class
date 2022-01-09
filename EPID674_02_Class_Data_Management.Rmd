@@ -56,10 +56,10 @@ here() # Orient yourself to the default file path format on your computer
 1) Load demographics, complete blood counts, and chemical datasets
 2) Check datasets
 3) Keep only the useful variables
-4) Merge datasets
-5) Update object types and set reference levels
-6) Create categorical variables
-7) Create age groups
+4) Join datasets together
+5) Create new numeric variables from numeric variables
+6) Create categorical variables from numeric variables
+7) Update object types and set reference levels for factor variables
 8) Save cleaned dataset
 
 
@@ -94,9 +94,6 @@ rownames(demog)[1:20] # What are the row names?
 
 head(demog) # What do the first 6 rows look like?
 demog[1:10, ] # What do the first 10 rows look like?
-
-# Look at the whole dataset
-head(demog)
 ```
 
 
@@ -221,9 +218,9 @@ dim(cotinine)
 ```
 
 
-# One dataset at a time, merge all datasets with the demographics dataset
+# One dataset at a time, join all datasets with the demographics dataset
 
-```{r data_merge}
+```{r join_datasets}
 
 # Merge the demographics and complete blood count datasets
 demog_cbc <- left_join(demog_subset, cbc_subset, by = "SEQN")
@@ -249,122 +246,24 @@ str(demog_cbc_fe_as_cdpb)
 # Note, the variable label for SEQN in the cotinine dataset from NHANES has a different capitalization pattern, so R recognizes this as a different variable from the SEQN variable in all of the other datasets. Let's strip the label from that variable and then do the merge.
 demog_cbc_fe_as_cdpb <- remove_label(demog_cbc_fe_as_cdpb, SEQN)
 cotinine_subset <- remove_label(cotinine_subset, SEQN)
-demog_cbc_chems <- left_join(demog_cbc_fe_as_cdpb, cotinine_subset, by = "SEQN")
+nhanes <- left_join(demog_cbc_fe_as_cdpb, cotinine_subset, by = "SEQN")
 # Check the merge - How many participants and variables do you expect?
-str(demog_cbc_chems)
+str(nhanes)
 
-# This is our merged dataset!
+# This is our joined dataset!
 ```
-
-
-# Convert race/ethnicity and sex variables from numeric to factors
-
-```{r convert_variable_types}
-
-# Check the initial counts of race/ethnicity and sex
-table(demog_cbc_chems$RIDRETH1)
-table(demog_cbc_chems$RIASEX)
-
-# Check the initial data type of the variables
-str(demog_cbc_chems$RIDRETH1)
-str(demog_cbc_chems$RIASEX)
-
-# Update race/ethnicity and sex from numbers to characters
-nhanes_factor <- demog_cbc_chems %>%
-  mutate(race_eth = case_when(RIDRETH1 == 1 ~ "Mexican American",
-                              RIDRETH1 == 2 ~ "Other Hispanic",
-                              RIDRETH1 == 3 ~ "Non-Hispanic White",
-                              RIDRETH1 == 4 ~ "Non-Hispanic Black",
-                              RIDRETH1 == 5 ~ "Other Race"),
-         sex = case_when(RIASEX == 1 ~ "Male",
-                         RIASEX == 2 ~ "Female")) %>%
-  mutate(sex = factor(sex),               #change the character variables into factor variables
-         race_eth = factor(race_eth)) %>%
-  mutate(sex = relevel(sex,               #set the reference levels
-                       ref = "Male"),
-         race_eth = relevel(race_eth,
-                            ref = "Non-Hispanic White")) 
-# Check the counts of the new variables
-table(nhanes_factor$race_eth)
-table(nhanes_factor$sex)
-
-# Do the counts still match?
-
-# Check the data type of the new variables
-str(nhanes_factor$race_eth)
-str(nhanes_factor$sex)
-```
-
-
-# Clean and convert the education variables from numeric to factors
-* **https://wwwn.cdc.gov/Nchs/Nhanes/2017-2018/DEMO_J.htm**
-
-```{r set_factor_levels}
-
-# DMDEDUC3 - participants 6 - 19 years old
-# DMDEDUC2 - participants 20+ years old
-
-# Check original counts of DMDEDUC3
-table(nhanes_factor$RIDAGEYR < 20, useNA = "always") #3685 participants under 20
-table(nhanes_factor$DMDEDUC3, useNA = "always") #values 0-15 and 66
-table(nhanes_factor$DMDEDUC3 >= 0, useNA = "always") #2306 participants with education reported
-
-# Check original counts of DMDEDUC2
-table(nhanes_factor$RIDAGEYR >= 20, useNA = "always") #5569 participants 20+ years
-table(nhanes_factor$DMDEDUC2, useNA = "always") #values 1-5, 7, 9
-table(nhanes_factor$DMDEDUC2 >= 0, useNA = "always") #5569 participants with data (13 with 7 or 9)
-
-# Update the numeric codes to categories
-nhanes_educ2_3 <- nhanes_factor %>%
-  mutate(education_youth = case_when(DMDEDUC3 >= 0 & DMDEDUC3 <= 5 ~ "Less than 5th grade",
-                                DMDEDUC3 >= 6 & DMDEDUC3 <= 12 | DMDEDUC3 == 66 ~ "Less than high school",
-                                DMDEDUC3 == 13 | DMDEDUC3 == 14 ~ "High school or GED",
-                                DMDEDUC3 == 15 ~ "More than high school")) %>%
-  mutate(education_adult = case_when(DMDEDUC2 == 1 | DMDEDUC2 == 2 ~ "Less than high school",
-                                 DMDEDUC2 == 3 ~ "High school or GED",
-                                 DMDEDUC2 == 4 | DMDEDUC2 == 5 ~ "More than high school",
-                                 DMDEDUC2 == 7 | DMDEDUC2 == 9 ~ "Unknown")) %>%
-  mutate(education_adult = na_if(education_adult, "Unknown")) #Make all the "Unknown" values missing
-
-# Check the counts
-table(nhanes_educ2_3$education_youth, useNA = "always")
-table(nhanes_educ2_3$education_adult, useNA = "always")
-
-
-# Merge the two education variables
-nhanes_educ <- nhanes_educ2_3 %>%
-  mutate(education = coalesce(education_youth,
-                              education_adult))
-
-# View the last three columns in the dataset
-head(nhanes_educ)
-
-# Set the factor levels and reference for education, reorder the columns
-nhanes_educ <- nhanes_educ %>%
-  mutate(education = relevel(factor(education,
-                                    levels = c("Less than 5th grade",
-                                               "Less than high school",
-                                               "High school or GED",
-                                               "More than high school")),
-                             ref = "Less than high school"))
-
-# Check the counts
-table(nhanes_educ$education, useNA = "always")
-# Note: setting a reference automatically makes the reference the first level
-```
-
 
 # Create a new continuous variable from other continuous variables
 
 ```{r create_continuous_variables}
 
 # Create a neutrophil:lymphocyte ratio variable (NLR)
-nhanes_nlr <- nhanes_educ %>%
+nhanes <- nhanes %>%
   mutate(nlr = LBDNENO / LBDLYMNO) 
 
 
 # View the new variable to look at the changes
-nhanes_nlr %>%
+nhanes %>%
   select(SEQN,
          LBDNENO,
          LBDLYMNO,
@@ -377,16 +276,23 @@ nhanes_nlr %>%
 
 ```{r create_categorical_variables}
 
+ # How many participants do you expect in each of the iron status groups?
+sum(nhanes$LBXIRN < 60, na.rm = TRUE)
+sum(nhanes$LBXIRN >= 60 & nhanes$LBXIRN <= 170, na.rm = TRUE)
+sum(nhanes$LBXIRN > 170, na.rm = TRUE)
+
 # Create a categorical variable of iron status based on serum concentrations
-nhanes_iron_categ <- nhanes_nlr %>%
+nhanes <- nhanes %>%
   mutate(iron_status = case_when(LBXIRN < 60 ~ "Deficient",
                                  LBXIRN > 170 ~ "Excessive",
                                  LBXIRN >= 60 & LBXIRN <= 170 ~ "Normal")) %>%
   mutate(iron_status = relevel(factor(iron_status),
                                ref = "Deficient"))
 
+table(nhanes$iron_status) # How many participants did you get in each group?
+
 # Check the structure of the dataset to see that iron_status is after LBXIRN and it is a factor with reference = "Deficient"
-str(nhanes_iron_categ)
+str(nhanes$iron_status)
 ```
 
 
@@ -395,17 +301,19 @@ str(nhanes_iron_categ)
 ```{r cut_continuous_variables}
 
 # Make groups of equal range
-nhanes_dataset <- nhanes_iron_categ %>%
+nhanes <- nhanes %>%
   mutate(age_groups = cut_interval(RIDAGEYR, n = 5)) 
-table(nhanes_dataset$age_groups)
+
+table(nhanes$age_groups) # How many participants did you get in each group?
 
 
 # Other options:
 
 # Five groups with approximately equal numbers of participants (cut_number())
-nhanes_age <- nhanes_iron_categ %>%
+nhanes <- nhanes %>%
   mutate(cut_groups = cut_number(RIDAGEYR, n = 5))
-table(nhanes_age$cut_groups)
+
+table(nhanes$cut_groups) # How many participants did you get in each group?
 ```
 
 # Check your understanding!
@@ -419,24 +327,138 @@ Serum cotinine is a continuous variable in our dataset. Let's use it to create a
 
 
 
+# Convert sex and race/ethnicity variables from numeric to factors
+
+```{r convert_variable_types}
+
+# Update sex variable
+# Check initial counts and data type
+table(nhanes$RIASEX)
+str(nhanes$RIASEX)
+
+# Update sex from numbers to characters
+nhanes <- nhanes %>%
+  mutate(sex = case_when(RIASEX == 1 ~ "Male",
+                         RIASEX == 2 ~ "Female")) %>%
+  mutate(sex = factor(sex))   %>%         #change the character variables into factor variables
+  mutate(sex = relevel(sex,               #set the reference levels
+                       ref = "Male"))
+
+# Check the count and data type of the new variable
+table(nhanes$sex)
+str(nhanes$sex)
+# Do the counts still match?
+
+
+# Update race/ethnicity variable
+# Check the initial counts and data type
+table(nhanes$RIDRETH1)
+str(nhanes$RIDRETH1)
+
+# Update race/ethnicity from numbers to characters
+nhanes <- nhanes %>%
+  mutate(race_eth = case_when(RIDRETH1 == 1 ~ "Mexican American",
+                              RIDRETH1 == 2 ~ "Other Hispanic",
+                              RIDRETH1 == 3 ~ "Non-Hispanic White",
+                              RIDRETH1 == 4 ~ "Non-Hispanic Black",
+                              RIDRETH1 == 5 ~ "Other Race")) %>%
+  mutate(race_eth = factor(race_eth)) %>% #change the character variables into factor variables
+  mutate(race_eth = relevel(race_eth, #set the reference levels
+                            ref = "Non-Hispanic White")) 
+
+# Check the count and data type of the new variable
+table(nhanes$race_eth)
+str(nhanes$race_eth)
+# Do the counts still match?
+```
+
+
+# Clean and convert the education variables from numeric to factors
+* **https://wwwn.cdc.gov/Nchs/Nhanes/2017-2018/DEMO_J.htm**
+
+```{r set_factor_levels}
+
+# Education variable for youth 
+# DMDEDUC3 - participants 6 - 19 years old
+# Check original counts of DMDEDUC3
+table(nhanes$RIDAGEYR < 20, useNA = "always") #3685 participants under 20
+table(nhanes$DMDEDUC3, useNA = "always") #values 0-15 and 66
+table(nhanes$DMDEDUC3 >= 0, useNA = "always") #2306 youth participants with education reported
+
+# Update the numeric codes to categories
+nhanes <- nhanes %>%
+  mutate(education_youth = case_when(DMDEDUC3 >= 0 & DMDEDUC3 <= 5 ~ "Less than 5th grade",
+                                DMDEDUC3 >= 6 & DMDEDUC3 <= 12 | DMDEDUC3 == 66 ~ "Less than high school",
+                                DMDEDUC3 == 13 | DMDEDUC3 == 14 ~ "High school or GED",
+                                DMDEDUC3 == 15 ~ "More than high school")) 
+  
+# Check the counts
+table(nhanes$education_youth, useNA = "always")
+
+
+
+# Education variable for adults
+# DMDEDUC2 - participants 20+ years old
+# Check original counts of DMDEDUC2
+table(nhanes$RIDAGEYR >= 20, useNA = "always") #5569 participants 20+ years
+table(nhanes$DMDEDUC2, useNA = "always") #values 1-5, 7, 9
+table(nhanes$DMDEDUC2 >= 0, useNA = "always") #5569 adult participants with education data (13 with 7 or 9)
+
+# Update the numeric codes to categories
+nhanes <- nhanes %>%
+  mutate(education_adult = case_when(DMDEDUC2 == 1 | DMDEDUC2 == 2 ~ "Less than high school",
+                                 DMDEDUC2 == 3 ~ "High school or GED",
+                                 DMDEDUC2 == 4 | DMDEDUC2 == 5 ~ "More than high school",
+                                 DMDEDUC2 == 7 | DMDEDUC2 == 9 ~ "Unknown")) %>%
+  mutate(education_adult = na_if(education_adult, "Unknown")) #Make all the "Unknown" values missing
+
+# Check the counts
+table(nhanes$education_adult, useNA = "always")
+
+
+# Combine the two education variables
+nhanes <- nhanes %>%
+  mutate(education = coalesce(education_youth,
+                              education_adult)) %>%
+  # Set the factor levels and reference for education, reorder the columns
+  mutate(education = relevel(factor(education, 
+                                    levels = c("Less than 5th grade",
+                                               "Less than high school",
+                                               "High school or GED",
+                                               "More than high school")),
+                             ref = "Less than high school"))
+
+# View the new columns
+nhanes %>% 
+  select(education_youth,
+         education_adult,
+         education) %>%
+  head()
+
+# Check the counts
+table(nhanes$education, useNA = "always")
+# Note: setting a reference automatically makes the reference the first level
+```
+
+
 # Save dataset for the future
 
 ```{r save_dataset}
 
 # Reorder the variable names for next time
-nhanes_col <-  c("SEQN", "RIASEX", "sex", "RIDAGEYR", "age_groups", "RIDRETH1", "race_eth",  "INDFMPIR", "DMDEDUC3", "DMDEDUC2", "education_youth", "education_adult", "education",       "SDMVSTRA", "SDMVPSU", "LBXRBCSI", "LBXWBCSI", "LBDLYMNO", "LBDNENO", "nlr", "LBXIRN", "iron_status", "URXUAS", "LBXBCD", "LBXBPB", "LBXCOT")
-nhanes_dataset <- relocate(nhanes_dataset, all_of(nhanes_col))
-head(nhanes_dataset)
+nhanes_col <-  c("SEQN", "RIASEX", "sex", "RIDAGEYR", "age_groups", "RIDRETH1", "race_eth",  "INDFMPIR", "DMDEDUC3", "DMDEDUC2", "education_youth", "education_adult", "education", "SDMVSTRA", "SDMVPSU", "LBXRBCSI", "LBXWBCSI", "LBDLYMNO", "LBDNENO", "nlr", "LBXIRN", "iron_status", "URXUAS", "LBXBCD", "LBXBPB", "LBXCOT")
+nhanes <- relocate(nhanes, all_of(nhanes_col))
+head(nhanes)
 
 # Save dataset as a csv file
-write_csv(nhanes_dataset, file = here("nhanes_dataset.csv"))
+write_csv(nhanes, file = here("nhanes_class_dataset.csv"))
 # Save dataset as an R object
-save(nhanes_dataset, file = here("nhanes_dataset.rda"))
+save(nhanes, file = here("nhanes_class_dataset.rda"))
 
 # Import dataset back into R from the csv or R object
 # Only R object keeps the preset factor variables saved
-nhanes_dataset_csv <- read_csv(here(("nhanes_dataset.csv")))
-load(here(("nhanes_dataset.rda")))
+nhanes_csv <- read_csv(here(("nhanes_class_dataset.csv")))
+load(here(("nhanes_class_dataset.rda")))
 ```
 
 
