@@ -141,7 +141,7 @@ colnames(cotinine)
 # What variable is the same between the datasets?
 ```
 
-# Subset datasets to keep only variables that we will use in the class
+# Select columns of datasets to keep only variables that we will use in the class
 
 ```{r select}
 
@@ -151,7 +151,7 @@ colnames(cotinine)
 ############ Demographics dataset ############
 dim(demog)
 #9254   46
-demog_subset <- demog %>%
+demog_select <- demog %>%
   select(SEQN,     #participant identifier
          RIAGENDR, #sex
          RIDAGEYR, #age in years
@@ -164,56 +164,56 @@ demog_subset <- demog %>%
          SDMVPSU   #Primary Sampling Unit: 30 per nhanes cycle - mostly single counties, selected from strata
          ) %>%
   rename(RIASEX = RIAGENDR) #rename RIAGENDR to be RIASEX because NHANES asked about sex, not gender
-dim(demog)
+dim(demog_select)
 #9254    9 - number of rows does not change
 
 ############ Complete blood count dataset ############
 dim(cbc)
 #8366   22
-cbc_subset <- cbc %>%
+cbc_select <- cbc %>%
   select(SEQN,
          LBXRBCSI,
          LBXWBCSI,
          LBDLYMNO,
          LBDNENO)
-dim(cbc)
+dim(cbc_select)
 #8366    2
 
 ############ Iron dataset ############
 dim(fe)
 #6401    9
-fe_subset <- fe %>%
+fe_select <- fe %>%
   select(SEQN,
          LBXIRN)
-dim(fe)
+dim(fe_select)
 #6401    2
 
 ############ Arsenic dataset ############
 dim(as)
 #2979    4
-as_subset <- as %>%
+as_select <- as %>%
   select(SEQN,
          URXUAS)
-dim(as_subset)
+dim(as_select)
 #2979    2
 
 ############ Cadmium/Lead dataset ############
 dim(cd_pb)
 #8366   16
-cd_pb_subset <- cd_pb %>%
+cd_pb_select <- cd_pb %>%
   select(SEQN,
          LBXBCD,
          LBXBPB)
-dim(cd_pb_subset)
+dim(cd_pb_select)
 #8366    3
 
 ############ Cotinine dataset ############
 dim(cotinine)
 #7936    5
-cotinine_subset <- cotinine %>%
+cotinine_select <- cotinine %>%
   select(SEQN,
          LBXCOT)
-dim(cotinine)
+dim(cotinine_select)
 #7936    2
 ```
 
@@ -223,30 +223,30 @@ dim(cotinine)
 ```{r join_datasets}
 
 # Merge the demographics and complete blood count datasets
-demog_cbc <- left_join(demog_subset, cbc_subset, by = "SEQN")
+demog_cbc <- left_join(demog_select, cbc_select, by = "SEQN")
 # Check the merge - How many participants and variables do you expect?
 str(demog_cbc)
 
 # Merge the previous dataset and iron dataset
-demog_cbc_fe <- left_join(demog_cbc, fe_subset, by = "SEQN")
+demog_cbc_fe <- left_join(demog_cbc, fe_select, by = "SEQN")
 # Check the merge - How many participants and variables do you expect?
 str(demog_cbc_fe)
 
 # Merge the previous dataset and arsenic dataset
-demog_cbc_fe_as <- left_join(demog_cbc_fe, as_subset, by = "SEQN")
+demog_cbc_fe_as <- left_join(demog_cbc_fe, as_select, by = "SEQN")
 # Check the merge - How many participants and variables do you expect?
 str(demog_cbc_fe_as)
 
 # Merge the previous dataset and cadmium/lead dataset
-demog_cbc_fe_as_cdpb <- left_join(demog_cbc_fe_as, cd_pb_subset, by = "SEQN")
+demog_cbc_fe_as_cdpb <- left_join(demog_cbc_fe_as, cd_pb_select, by = "SEQN")
 # Check the merge - How many participants and variables do you expect?
 str(demog_cbc_fe_as_cdpb)
 
 # Merge the previous dataset and cotinine dataset
 # Note, the variable label for SEQN in the cotinine dataset from NHANES has a different capitalization pattern, so R recognizes this as a different variable from the SEQN variable in all of the other datasets. Let's strip the label from that variable and then do the merge.
 demog_cbc_fe_as_cdpb <- remove_label(demog_cbc_fe_as_cdpb, SEQN)
-cotinine_subset <- remove_label(cotinine_subset, SEQN)
-nhanes <- left_join(demog_cbc_fe_as_cdpb, cotinine_subset, by = "SEQN")
+cotinine_select <- remove_label(cotinine_select, SEQN)
+nhanes <- left_join(demog_cbc_fe_as_cdpb, cotinine_select, by = "SEQN")
 # Check the merge - How many participants and variables do you expect?
 str(nhanes)
 
