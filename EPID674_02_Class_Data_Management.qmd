@@ -1,0 +1,492 @@
+---
+title: "EPID674 Epidemiologic Data Analysis using R"
+subtitle: "Wrangling and Exploring Data with R"
+author: "Kelly Bakulski, Lauren Middleton"
+date: "Last compiled on `r format(Sys.Date(), '%B %d, %Y')`"
+format: html
+editor: source
+---
+
+## Session 2, Wrangling and Exploring Data with R
+
+### Identify base packages and install new packages
+
+```{r}
+sessionInfo() # check what packages are already loaded by default
+```
+
+### Install new packages
+
+```{r}
+#| eval: false
+# The operator #| is called the hashpipe. This is how we specify options for the entire code chunk. 
+# In this case with the option eval: false, we're telling R not to actually evaluate this code chunk.
+
+# Install packages. Do this only once.
+# Note, we already installed packages to this workspace for the class. If working on your personal computer, will need to run this code
+install.packages("tidyverse")
+install.packages("here")
+install.packages("nhanesA")
+install.packages("sjlabelled")
+
+# To actually install the packages on your personal computer: change option in with the hashpipe #| operator to eval: true
+```
+
+
+## Load packages
+
+```{r}
+#| label: load_packages
+
+# Load packages. Load relevant packages every time you start a new R session and at the top of every .Rmd file
+library(tidyverse)
+library(here)
+library(nhanesA)
+library(sjlabelled)
+```
+
+## Specify file directories
+
+```{r}
+#| label: directories
+
+here() # Orient yourself to the default file path format on your computer
+
+#Expect to be when coding on RStudio Cloud
+#"/cloud/project" 
+```
+
+## Data cleaning plan:
+1) Load demographics, complete blood counts, and chemical datasets
+2) Check datasets
+3) Keep only the useful variables
+4) Join datasets together
+5) Create new numeric variables from numeric variables
+6) Create categorical variables from numeric variables
+7) Update object types and set reference levels for factor variables
+8) Save cleaned dataset
+
+
+## Import datasets from 2017-2018 NHANES
+* Datasets can be found at: **https://wwwn.cdc.gov/nchs/nhanes/continuousnhanes/default.aspx?BeginYear=2017**
+* Data are saved in multiple datasets that we will need to combine, starting with demographics
+* NHANES variables have labels as well as variable names 
+
+```{r}
+#| label: load_demographics_data
+
+# Download NHANES demographics data and remove the labels
+demog <- nhanes("DEMO_J")
+# Check the column names (variable names)
+colnames(demog)
+
+
+# Check the Demographics Data website for information about these variables:
+# https://wwwn.cdc.gov/nchs/nhanes/search/datapage.aspx?Component=Demographics&CycleBeginYear=2017
+#   What does RIAGENDR mean?
+```
+
+## Explore the NHANES demographics dataset
+
+```{r}
+#| label: explore_data
+
+# Explore the data set
+str(demog) # Get detailed information about each variable and the object overall
+dim(demog) # What are the dimensions?
+colnames(demog) # What are the column names?
+rownames(demog)[1:20] # What are the row names?
+
+
+head(demog) # What do the first 6 rows look like?
+demog[1:10, ] # What do the first 10 rows look like?
+```
+
+
+# Explore individual variables in the NHANES dataset
+
+```{r}
+#| label: explore_variables
+
+# Explore the variables, starting with RIDAGEYR
+length(demog$RIDAGEYR) # How many observations are in this variable?
+str(demog$RIDAGEYR) # What type of object is the variable?
+demog$RIDAGEYR[1:10] # Are there any duplicates in the first few values?
+```
+
+# Check your understanding!
+When you start with a new dataset, be sure to explore every variable. As an example, let's explore another variable: INDFMPIR
+* Make a new R code chunk
+* How long is the INDFMPIR variable?
+* What type of object is the variable? (for example: character, numeric, etc.)
+* What are the first few values of the variable?
+
+## Let's load additional datasets, beyond demographics. This includes blood cell counts, metal levels, and cotinine levels
+
+```{r}
+#| label: load_exposure_outcome_data
+
+# Download Complete Blood Cell Laboratory Data, check the column names
+cbc <- nhanes("CBC_J")
+colnames(cbc)
+
+# Download Iron Data, check column names
+fe <- nhanes("FETIB_J")
+colnames(fe)
+
+# Download Arsenic Data, check column names
+as <- nhanes("UTAS_J")
+colnames(as)
+
+# Download Cadmium and Lead Data, check column names
+cd_pb <- nhanes("PBCD_J")
+colnames(cd_pb)
+
+# Download Cotinine Data, check column names
+cotinine <- nhanes("COT_J")
+colnames(cotinine)
+
+# What variable is the same between the datasets?
+```
+
+## Select columns of datasets to keep only variables that we will use in the class
+
+```{r}
+#| label: select
+
+# select() is a useful tidyverse function that keeps columns in a dataframe
+# We only want to keep the necessary variables to avoid creating a huge dataset
+
+############ Demographics dataset ############
+dim(demog)
+#9254   46
+demog_select <- demog %>%
+  select(SEQN,     #participant identifier
+         RIAGENDR, #sex
+         RIDAGEYR, #age in years
+         RIDRETH1, #race in number code
+         INDFMPIR, #poverty-income ratio
+         DMDEDUC3, #education categories for age 6-19
+         DMDEDUC2, #education categories for age 20+
+         #these two are for later (survey weighting)
+         SDMVSTRA, #Strata: based on census region, metropolitan area, or population demographics
+         SDMVPSU   #Primary Sampling Unit: 30 per nhanes cycle - mostly single counties, selected from strata
+         ) %>%
+  rename(RIASEX = RIAGENDR) #rename RIAGENDR to be RIASEX because NHANES asked about sex, not gender
+dim(demog_select)
+#9254    9 - number of rows does not change
+
+############ Complete blood count dataset ############
+dim(cbc)
+#8366   22
+cbc_select <- cbc %>%
+  select(SEQN,
+         LBXRBCSI,
+         LBXWBCSI,
+         LBDLYMNO,
+         LBDNENO)
+dim(cbc_select)
+#8366    2
+
+############ Iron dataset ############
+dim(fe)
+#6401    9
+fe_select <- fe %>%
+  select(SEQN,
+         LBXIRN)
+dim(fe_select)
+#6401    2
+
+############ Arsenic dataset ############
+dim(as)
+#2979    4
+as_select <- as %>%
+  select(SEQN,
+         URXUAS)
+dim(as_select)
+#2979    2
+
+############ Cadmium/Lead dataset ############
+dim(cd_pb)
+#8366   16
+cd_pb_select <- cd_pb %>%
+  select(SEQN,
+         LBXBCD,
+         LBXBPB)
+dim(cd_pb_select)
+#8366    3
+
+############ Cotinine dataset ############
+dim(cotinine)
+#7936    5
+cotinine_select <- cotinine %>%
+  select(SEQN,
+         LBXCOT)
+dim(cotinine_select)
+#7936    2
+```
+
+
+## One dataset at a time, join all datasets with the demographics dataset
+
+```{r}
+#| label: join_datasets
+
+# Merge the demographics and complete blood count datasets
+demog_cbc <- left_join(demog_select, cbc_select, by = "SEQN")
+# Check the merge - How many participants and variables do you expect?
+str(demog_cbc)
+
+# Merge the previous dataset and iron dataset
+demog_cbc_fe <- left_join(demog_cbc, fe_select, by = "SEQN")
+# Check the merge - How many participants and variables do you expect?
+str(demog_cbc_fe)
+
+# Merge the previous dataset and arsenic dataset
+demog_cbc_fe_as <- left_join(demog_cbc_fe, as_select, by = "SEQN")
+# Check the merge - How many participants and variables do you expect?
+str(demog_cbc_fe_as)
+
+# Merge the previous dataset and cadmium/lead dataset
+demog_cbc_fe_as_cdpb <- left_join(demog_cbc_fe_as, cd_pb_select, by = "SEQN")
+# Check the merge - How many participants and variables do you expect?
+str(demog_cbc_fe_as_cdpb)
+
+# Merge the previous dataset and cotinine dataset
+# Note, the variable label for SEQN in the cotinine dataset from NHANES has a different capitalization pattern, so R recognizes this as a different variable from the SEQN variable in all of the other datasets. Let's strip the label from that variable and then do the merge.
+demog_cbc_fe_as_cdpb <- remove_label(demog_cbc_fe_as_cdpb, SEQN)
+cotinine_select <- remove_label(cotinine_select, SEQN)
+nhanes <- left_join(demog_cbc_fe_as_cdpb, cotinine_select, by = "SEQN")
+# Check the merge - How many participants and variables do you expect?
+str(nhanes)
+
+# This is our joined dataset!
+```
+
+## Create a new continuous variable from other continuous variables
+
+```{r create_continuous_variables}
+#| label: create_continuous_variables
+
+# Create a neutrophil:lymphocyte ratio variable (NLR)
+nhanes <- nhanes %>%
+  mutate(nlr = LBDNENO / LBDLYMNO) 
+
+
+# View the new variable to look at the changes
+nhanes %>%
+  select(SEQN,
+         LBDNENO,
+         LBDLYMNO,
+         nlr) %>%
+  head()
+```
+
+
+## Create a categorical variable from a continuous variable
+
+```{r create_categorical_variables}
+#| label: create_categorial_variables
+
+ # How many participants do you expect in each of the iron status groups?
+sum(nhanes$LBXIRN < 60, na.rm = TRUE)
+sum(nhanes$LBXIRN >= 60 & nhanes$LBXIRN <= 170, na.rm = TRUE)
+sum(nhanes$LBXIRN > 170, na.rm = TRUE)
+
+# Create a categorical variable of iron status based on serum concentrations
+nhanes <- nhanes %>%
+  mutate(iron_status = case_when(LBXIRN < 60 ~ "Deficient",
+                                 LBXIRN > 170 ~ "Excessive",
+                                 LBXIRN >= 60 & LBXIRN <= 170 ~ "Normal")) %>%
+  mutate(iron_status = relevel(factor(iron_status),
+                               ref = "Deficient"))
+
+table(nhanes$iron_status) # How many participants did you get in each group?
+
+# Check the structure of the dataset to see that iron_status is after LBXIRN and it is a factor with reference = "Deficient"
+str(nhanes$iron_status)
+```
+
+
+## Use the cut function to slice a numeric variable into groups
+
+```{r}
+#| label: cut_continuous_variables
+
+# Make groups of equal range
+nhanes <- nhanes %>%
+  mutate(age_groups = cut_interval(RIDAGEYR, n = 5)) 
+
+table(nhanes$age_groups) # How many participants did you get in each group?
+
+
+# Other options:
+
+# Five groups with approximately equal numbers of participants (cut_number())
+nhanes <- nhanes %>%
+  mutate(cut_groups = cut_number(RIDAGEYR, n = 5))
+
+table(nhanes$cut_groups) # How many participants did you get in each group?
+```
+
+# Check your understanding!
+
+Serum cotinine is a continuous variable in our dataset. Let's use it to create a two-level categorical variable for nonsmoking versus smoking. Nonsmoking status can be defined as serum cotinine values less than or equal to 10 ng/mL (Pirkle et al., 1996). 
+* Make a new R code chunk
+* Make a new factor variable for smoking status
+* The variable should have the level "smoking" for cotinine greater than 10
+* The variable should have the level "nonsmoking" for cotinine less than or equal to 10
+* How many observations are in the nonsmoking category? In the smoking category?
+
+
+
+## Convert sex and race/ethnicity variables from numeric to factors
+
+```{r}
+#| label: convert_variable_types
+
+# Update sex variable
+# Check initial counts and data type
+table(nhanes$RIASEX)
+str(nhanes$RIASEX)
+
+# Update sex from numbers to characters
+nhanes <- nhanes %>%
+  mutate(sex = case_when(RIASEX == 1 ~ "Male",
+                         RIASEX == 2 ~ "Female")) %>%
+  mutate(sex = factor(sex))   %>%         #change the character variables into factor variables
+  mutate(sex = relevel(sex,               #set the reference levels
+                       ref = "Male"))
+
+# Check the count and data type of the new variable
+table(nhanes$sex)
+str(nhanes$sex)
+# Do the counts still match?
+
+
+# Update race/ethnicity variable
+# Check the initial counts and data type
+table(nhanes$RIDRETH1)
+str(nhanes$RIDRETH1)
+
+# Update race/ethnicity from numbers to characters
+nhanes <- nhanes %>%
+  mutate(race_eth = case_when(RIDRETH1 == 1 ~ "Mexican American",
+                              RIDRETH1 == 2 ~ "Other Hispanic",
+                              RIDRETH1 == 3 ~ "Non-Hispanic White",
+                              RIDRETH1 == 4 ~ "Non-Hispanic Black",
+                              RIDRETH1 == 5 ~ "Other Race")) %>%
+  mutate(race_eth = factor(race_eth)) %>% #change the character variables into factor variables
+  mutate(race_eth = relevel(race_eth, #set the reference levels
+                            ref = "Non-Hispanic White")) 
+
+# Check the count and data type of the new variable
+table(nhanes$race_eth)
+str(nhanes$race_eth)
+# Do the counts still match?
+```
+
+
+## Clean and convert the education variables from numeric to factors
+* **https://wwwn.cdc.gov/Nchs/Nhanes/2017-2018/DEMO_J.htm**
+
+```{r}
+#| label: set_factor_levels
+
+# Education variable for youth 
+# DMDEDUC3 - participants 6 - 19 years old
+# Check original counts of DMDEDUC3
+table(nhanes$RIDAGEYR < 20, useNA = "always") #3685 participants under 20
+table(nhanes$DMDEDUC3, useNA = "always") #values 0-15 and 66
+table(nhanes$DMDEDUC3 >= 0, useNA = "always") #2306 youth participants with education reported
+
+# Update the numeric codes to categories
+nhanes <- nhanes %>%
+  mutate(education_youth = case_when(DMDEDUC3 >= 0 & DMDEDUC3 <= 5 ~ "Less than 5th grade",
+                                DMDEDUC3 >= 6 & DMDEDUC3 <= 12 | DMDEDUC3 == 66 ~ "Less than high school",
+                                DMDEDUC3 == 13 | DMDEDUC3 == 14 ~ "High school or GED",
+                                DMDEDUC3 == 15 ~ "More than high school")) 
+  
+# Check the counts
+table(nhanes$education_youth, useNA = "always")
+
+
+
+# Education variable for adults
+# DMDEDUC2 - participants 20+ years old
+# Check original counts of DMDEDUC2
+table(nhanes$RIDAGEYR >= 20, useNA = "always") #5569 participants 20+ years
+table(nhanes$DMDEDUC2, useNA = "always") #values 1-5, 7, 9
+table(nhanes$DMDEDUC2 >= 0, useNA = "always") #5569 adult participants with education data (13 with 7 or 9)
+
+# Update the numeric codes to categories
+nhanes <- nhanes %>%
+  mutate(education_adult = case_when(DMDEDUC2 == 1 | DMDEDUC2 == 2 ~ "Less than high school",
+                                 DMDEDUC2 == 3 ~ "High school or GED",
+                                 DMDEDUC2 == 4 | DMDEDUC2 == 5 ~ "More than high school",
+                                 DMDEDUC2 == 7 | DMDEDUC2 == 9 ~ "Unknown")) %>%
+  mutate(education_adult = na_if(education_adult, "Unknown")) #Make all the "Unknown" values missing
+
+# Check the counts
+table(nhanes$education_adult, useNA = "always")
+
+
+# Combine the two education variables
+nhanes <- nhanes %>%
+  mutate(education = coalesce(education_youth,
+                              education_adult)) %>%
+  # Set the factor levels and reference for education, reorder the columns
+  mutate(education = relevel(factor(education, 
+                                    levels = c("Less than 5th grade",
+                                               "Less than high school",
+                                               "High school or GED",
+                                               "More than high school")),
+                             ref = "Less than high school"))
+
+# View the new columns
+nhanes %>% 
+  select(education_youth,
+         education_adult,
+         education) %>%
+  head()
+
+# Check the counts
+table(nhanes$education, useNA = "always")
+# Note: setting a reference automatically makes the reference the first level
+```
+
+
+## Save dataset for the future
+
+```{r}
+#| label: save_dataset
+
+# Reorder the variable names for next time
+nhanes_col <-  c("SEQN", "RIASEX", "sex", "RIDAGEYR", "age_groups", "RIDRETH1", "race_eth",  "INDFMPIR", "DMDEDUC3", "DMDEDUC2", "education_youth", "education_adult", "education", "SDMVSTRA", "SDMVPSU", "LBXRBCSI", "LBXWBCSI", "LBDLYMNO", "LBDNENO", "nlr", "LBXIRN", "iron_status", "URXUAS", "LBXBCD", "LBXBPB", "LBXCOT")
+nhanes <- relocate(nhanes, all_of(nhanes_col))
+head(nhanes)
+
+# Save dataset as a csv file
+write_csv(nhanes, file = here("nhanes_class_dataset.csv"))
+# Save dataset as an R object
+save(nhanes, file = here("nhanes_class_dataset.rda"))
+
+# Import dataset back into R from the csv or R object
+# Only R object keeps the preset factor variables saved
+nhanes_csv <- read_csv(here(("nhanes_class_dataset.csv")))
+load(here(("nhanes_class_dataset.rda")))
+```
+
+
+## Remember to save your R script!
+
+## To exit R
+
+```{r}
+#| label: exit
+#| eval: false
+# q()
+## if you close R, you will be asked to save your workspace image
+```
+
+## Click **Render** to run all of your code and generate a report
