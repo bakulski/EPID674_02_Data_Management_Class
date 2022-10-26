@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Kelly Bakulski, Lauren Middleton">
-<meta name="dcterms.date" content="2022-10-25">
+<meta name="dcterms.date" content="2022-10-26">
 
 <title>EPID674 Epidemiologic Data Analysis using R</title>
 <style>
@@ -128,7 +128,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">October 25, 2022</p>
+      <p class="date">October 26, 2022</p>
     </div>
   </div>
     
@@ -137,26 +137,994 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 </header>
 
-<section id="quarto" class="level2">
-<h2 class="anchored" data-anchor-id="quarto">Quarto</h2>
-<p>Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <a href="https://quarto.org" class="uri">https://quarto.org</a>.</p>
+<section id="session-2-wrangling-and-exploring-data-with-r" class="level2">
+<h2 class="anchored" data-anchor-id="session-2-wrangling-and-exploring-data-with-r">Session 2, Wrangling and Exploring Data with R</h2>
+<section id="identify-base-packages-and-install-new-packages" class="level3">
+<h3 class="anchored" data-anchor-id="identify-base-packages-and-install-new-packages">Identify base packages and install new packages</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>() <span class="co"># check what packages are already loaded by default</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>R version 4.2.1 (2022-06-23)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 20.04.5 LTS
+
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/atlas/libblas.so.3.10.3
+LAPACK: /usr/lib/x86_64-linux-gnu/atlas/liblapack.so.3.10.3
+
+locale:
+ [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
+ [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   
+ [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          
+[10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+ [1] digest_0.6.30     jsonlite_1.8.2    magrittr_2.0.3    evaluate_0.17    
+ [5] rlang_1.0.6       stringi_1.7.8     cli_3.4.1         rstudioapi_0.14  
+ [9] rmarkdown_2.17    tools_4.2.1       stringr_1.4.1     htmlwidgets_1.5.4
+[13] xfun_0.33         yaml_2.3.6        fastmap_1.1.0     compiler_4.2.1   
+[17] htmltools_0.5.3   knitr_1.40       </code></pre>
+</div>
+</div>
 </section>
-<section id="running-code" class="level2">
-<h2 class="anchored" data-anchor-id="running-code">Running Code</h2>
-<p>When you click the <strong>Render</strong> button a document will be generated that includes both content and the output of embedded code. You can embed code like this:</p>
+<section id="install-new-packages" class="level3">
+<h3 class="anchored" data-anchor-id="install-new-packages">Install new packages</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="sc">+</span> <span class="dv">1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 2</code></pre>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The operator #| is called the hashpipe. This is how we specify options for the entire code chunk. </span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># In this case with the option eval: false, we're telling R not to actually evaluate this code chunk.</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Install packages. Do this only once.</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Note, we already installed packages to this workspace for the class. If working on your personal computer, will need to run this code</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">"tidyverse"</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">"here"</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">"nhanesA"</span>)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">"sjlabelled"</span>)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co"># To actually install the packages on your personal computer: change option in with the hashpipe #| operator to eval: true</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</div>
-<p>You can add options to executable code like this</p>
+</section>
+</section>
+<section id="load-packages" class="level2">
+<h2 class="anchored" data-anchor-id="load-packages">Load packages</h2>
 <div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load packages. Load relevant packages every time you start a new R session and at the top of every .Rmd file</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
+✔ ggplot2 3.3.6      ✔ purrr   0.3.5 
+✔ tibble  3.1.8      ✔ dplyr   1.0.10
+✔ tidyr   1.2.1      ✔ stringr 1.4.1 
+✔ readr   2.1.3      ✔ forcats 0.5.2 
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>here() starts at /cloud/project</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(nhanesA)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sjlabelled)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'sjlabelled'
+
+The following object is masked from 'package:forcats':
+
+    as_factor
+
+The following object is masked from 'package:dplyr':
+
+    as_label
+
+The following object is masked from 'package:ggplot2':
+
+    as_label</code></pre>
+</div>
+</div>
+</section>
+<section id="specify-file-directories" class="level2">
+<h2 class="anchored" data-anchor-id="specify-file-directories">Specify file directories</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">here</span>() <span class="co"># Orient yourself to the default file path format on your computer</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 4</code></pre>
+<pre><code>[1] "/cloud/project"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Expect to be when coding on RStudio Cloud</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co">#"/cloud/project" </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="data-cleaning-plan" class="level2">
+<h2 class="anchored" data-anchor-id="data-cleaning-plan">Data cleaning plan:</h2>
+<ol type="1">
+<li>Load demographics, complete blood counts, and chemical datasets</li>
+<li>Check datasets</li>
+<li>Keep only the useful variables</li>
+<li>Join datasets together</li>
+<li>Create new numeric variables from numeric variables</li>
+<li>Create categorical variables from numeric variables</li>
+<li>Update object types and set reference levels for factor variables</li>
+<li>Save cleaned dataset</li>
+</ol>
+</section>
+<section id="import-datasets-from-2017-2018-nhanes" class="level2">
+<h2 class="anchored" data-anchor-id="import-datasets-from-2017-2018-nhanes">Import datasets from 2017-2018 NHANES</h2>
+<ul>
+<li>Datasets can be found at: <strong>https://wwwn.cdc.gov/nchs/nhanes/continuousnhanes/default.aspx?BeginYear=2017</strong></li>
+<li>Data are saved in multiple datasets that we will need to combine, starting with demographics</li>
+<li>NHANES variables have labels as well as variable names</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download NHANES demographics data</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>demog <span class="ot">&lt;-</span> <span class="fu">nhanes</span>(<span class="st">"DEMO_J"</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the column names (variable names)</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(demog)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "SEQN"     "SDDSRVYR" "RIDSTATR" "RIAGENDR" "RIDAGEYR" "RIDAGEMN"
+ [7] "RIDRETH1" "RIDRETH3" "RIDEXMON" "RIDEXAGM" "DMQMILIZ" "DMQADFC" 
+[13] "DMDBORN4" "DMDCITZN" "DMDYRSUS" "DMDEDUC3" "DMDEDUC2" "DMDMARTL"
+[19] "RIDEXPRG" "SIALANG"  "SIAPROXY" "SIAINTRP" "FIALANG"  "FIAPROXY"
+[25] "FIAINTRP" "MIALANG"  "MIAPROXY" "MIAINTRP" "AIALANGA" "DMDHHSIZ"
+[31] "DMDFMSIZ" "DMDHHSZA" "DMDHHSZB" "DMDHHSZE" "DMDHRGND" "DMDHRAGZ"
+[37] "DMDHREDZ" "DMDHRMAZ" "DMDHSEDZ" "WTINT2YR" "WTMEC2YR" "SDMVPSU" 
+[43] "SDMVSTRA" "INDHHIN2" "INDFMIN2" "INDFMPIR"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the Demographics Data website for information about these variables:</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co"># https://wwwn.cdc.gov/nchs/nhanes/search/datapage.aspx?Component=Demographics&amp;CycleBeginYear=2017</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co">#   What does RIAGENDR mean?</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="explore-the-nhanes-demographics-dataset" class="level2">
+<h2 class="anchored" data-anchor-id="explore-the-nhanes-demographics-dataset">Explore the NHANES demographics dataset</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Explore the data set</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(demog) <span class="co"># Get detailed information about each variable and the object overall</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>'data.frame':   9254 obs. of  46 variables:
+ $ SEQN    : num  93703 93704 93705 93706 93707 ...
+ $ SDDSRVYR: num  10 10 10 10 10 10 10 10 10 10 ...
+ $ RIDSTATR: num  2 2 2 2 2 2 2 2 2 2 ...
+ $ RIAGENDR: num  2 1 2 1 1 2 2 2 1 1 ...
+ $ RIDAGEYR: num  2 2 66 18 13 66 75 0 56 18 ...
+ $ RIDAGEMN: num  NA NA NA NA NA NA NA 11 NA NA ...
+ $ RIDRETH1: num  5 3 4 5 5 5 4 3 5 1 ...
+ $ RIDRETH3: num  6 3 4 6 7 6 4 3 6 1 ...
+ $ RIDEXMON: num  2 1 2 2 2 2 1 2 2 2 ...
+ $ RIDEXAGM: num  27 33 NA 222 158 NA NA 13 NA 227 ...
+ $ DMQMILIZ: num  NA NA 2 2 NA 2 2 NA 2 2 ...
+ $ DMQADFC : num  NA NA NA NA NA NA NA NA NA NA ...
+ $ DMDBORN4: num  1 1 1 1 1 2 1 1 2 2 ...
+ $ DMDCITZN: num  1 1 1 1 1 1 1 1 1 2 ...
+ $ DMDYRSUS: num  NA NA NA NA NA 7 NA NA 6 5 ...
+ $ DMDEDUC3: num  NA NA NA 15 6 NA NA NA NA 12 ...
+ $ DMDEDUC2: num  NA NA 2 NA NA 1 4 NA 5 NA ...
+ $ DMDMARTL: num  NA NA 3 NA NA 1 2 NA 1 NA ...
+ $ RIDEXPRG: num  NA NA NA NA NA NA NA NA NA NA ...
+ $ SIALANG : num  1 1 1 1 1 1 1 1 1 1 ...
+ $ SIAPROXY: num  1 1 2 2 1 2 2 1 2 2 ...
+ $ SIAINTRP: num  2 2 2 2 2 1 2 2 2 2 ...
+ $ FIALANG : num  1 1 1 NA 1 1 1 1 1 2 ...
+ $ FIAPROXY: num  2 2 2 NA 2 2 2 2 2 2 ...
+ $ FIAINTRP: num  2 2 2 NA 2 2 2 2 2 2 ...
+ $ MIALANG : num  NA NA 1 1 1 1 NA NA 1 1 ...
+ $ MIAPROXY: num  NA NA 2 2 2 2 NA NA 2 2 ...
+ $ MIAINTRP: num  NA NA 2 2 2 1 NA NA 2 2 ...
+ $ AIALANGA: num  NA NA 1 1 1 3 NA NA 1 1 ...
+ $ DMDHHSIZ: num  5 4 1 5 7 2 1 3 3 4 ...
+ $ DMDFMSIZ: num  5 4 1 5 7 2 1 3 3 4 ...
+ $ DMDHHSZA: num  3 2 0 0 0 0 0 1 0 0 ...
+ $ DMDHHSZB: num  0 0 0 0 3 0 0 0 0 2 ...
+ $ DMDHHSZE: num  0 0 1 1 0 2 1 0 0 0 ...
+ $ DMDHRGND: num  1 1 2 1 1 1 2 1 1 2 ...
+ $ DMDHRAGZ: num  2 2 4 4 3 4 4 2 3 3 ...
+ $ DMDHREDZ: num  3 3 1 3 2 1 2 3 3 1 ...
+ $ DMDHRMAZ: num  1 1 2 1 1 1 2 1 1 2 ...
+ $ DMDHSEDZ: num  3 2 NA 2 3 1 NA 3 3 NA ...
+ $ WTINT2YR: num  9246 37339 8615 8549 6769 ...
+ $ WTMEC2YR: num  8540 42567 8338 8723 7065 ...
+ $ SDMVPSU : num  2 1 2 2 1 2 1 1 2 2 ...
+ $ SDMVSTRA: num  145 143 145 134 138 138 136 134 134 147 ...
+ $ INDHHIN2: num  15 15 3 NA 10 6 2 15 15 4 ...
+ $ INDFMIN2: num  15 15 3 NA 10 6 2 15 15 4 ...
+ $ INDFMPIR: num  5 5 0.82 NA 1.88 1.63 0.41 4.9 5 0.76 ...</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(demog) <span class="co"># What are the dimensions?</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 9254   46</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(demog) <span class="co"># What are the column names?</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "SEQN"     "SDDSRVYR" "RIDSTATR" "RIAGENDR" "RIDAGEYR" "RIDAGEMN"
+ [7] "RIDRETH1" "RIDRETH3" "RIDEXMON" "RIDEXAGM" "DMQMILIZ" "DMQADFC" 
+[13] "DMDBORN4" "DMDCITZN" "DMDYRSUS" "DMDEDUC3" "DMDEDUC2" "DMDMARTL"
+[19] "RIDEXPRG" "SIALANG"  "SIAPROXY" "SIAINTRP" "FIALANG"  "FIAPROXY"
+[25] "FIAINTRP" "MIALANG"  "MIAPROXY" "MIAINTRP" "AIALANGA" "DMDHHSIZ"
+[31] "DMDFMSIZ" "DMDHHSZA" "DMDHHSZB" "DMDHHSZE" "DMDHRGND" "DMDHRAGZ"
+[37] "DMDHREDZ" "DMDHRMAZ" "DMDHSEDZ" "WTINT2YR" "WTMEC2YR" "SDMVPSU" 
+[43] "SDMVSTRA" "INDHHIN2" "INDFMIN2" "INDFMPIR"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(demog)[<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>] <span class="co"># What are the row names?</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "1"  "2"  "3"  "4"  "5"  "6"  "7"  "8"  "9"  "10" "11" "12" "13" "14" "15"
+[16] "16" "17" "18" "19" "20"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(demog) <span class="co"># What do the first 6 rows look like?</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   SEQN SDDSRVYR RIDSTATR RIAGENDR RIDAGEYR RIDAGEMN RIDRETH1 RIDRETH3 RIDEXMON
+1 93703       10        2        2        2       NA        5        6        2
+2 93704       10        2        1        2       NA        3        3        1
+3 93705       10        2        2       66       NA        4        4        2
+4 93706       10        2        1       18       NA        5        6        2
+5 93707       10        2        1       13       NA        5        7        2
+6 93708       10        2        2       66       NA        5        6        2
+  RIDEXAGM DMQMILIZ DMQADFC DMDBORN4 DMDCITZN DMDYRSUS DMDEDUC3 DMDEDUC2
+1       27       NA      NA        1        1       NA       NA       NA
+2       33       NA      NA        1        1       NA       NA       NA
+3       NA        2      NA        1        1       NA       NA        2
+4      222        2      NA        1        1       NA       15       NA
+5      158       NA      NA        1        1       NA        6       NA
+6       NA        2      NA        2        1        7       NA        1
+  DMDMARTL RIDEXPRG SIALANG SIAPROXY SIAINTRP FIALANG FIAPROXY FIAINTRP MIALANG
+1       NA       NA       1        1        2       1        2        2      NA
+2       NA       NA       1        1        2       1        2        2      NA
+3        3       NA       1        2        2       1        2        2       1
+4       NA       NA       1        2        2      NA       NA       NA       1
+5       NA       NA       1        1        2       1        2        2       1
+6        1       NA       1        2        1       1        2        2       1
+  MIAPROXY MIAINTRP AIALANGA DMDHHSIZ DMDFMSIZ DMDHHSZA DMDHHSZB DMDHHSZE
+1       NA       NA       NA        5        5        3        0        0
+2       NA       NA       NA        4        4        2        0        0
+3        2        2        1        1        1        0        0        1
+4        2        2        1        5        5        0        0        1
+5        2        2        1        7        7        0        3        0
+6        2        1        3        2        2        0        0        2
+  DMDHRGND DMDHRAGZ DMDHREDZ DMDHRMAZ DMDHSEDZ  WTINT2YR  WTMEC2YR SDMVPSU
+1        1        2        3        1        3  9246.492  8539.731       2
+2        1        2        3        1        2 37338.768 42566.615       1
+3        2        4        1        2       NA  8614.571  8338.420       2
+4        1        4        3        1        2  8548.633  8723.440       2
+5        1        3        2        1        3  6769.345  7064.610       1
+6        1        4        1        1        1 13329.451 14372.489       2
+  SDMVSTRA INDHHIN2 INDFMIN2 INDFMPIR
+1      145       15       15     5.00
+2      143       15       15     5.00
+3      145        3        3     0.82
+4      134       NA       NA       NA
+5      138       10       10     1.88
+6      138        6        6     1.63</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>demog[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, ] <span class="co"># What do the first 10 rows look like?</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    SEQN SDDSRVYR RIDSTATR RIAGENDR RIDAGEYR RIDAGEMN RIDRETH1 RIDRETH3
+1  93703       10        2        2        2       NA        5        6
+2  93704       10        2        1        2       NA        3        3
+3  93705       10        2        2       66       NA        4        4
+4  93706       10        2        1       18       NA        5        6
+5  93707       10        2        1       13       NA        5        7
+6  93708       10        2        2       66       NA        5        6
+7  93709       10        2        2       75       NA        4        4
+8  93710       10        2        2        0       11        3        3
+9  93711       10        2        1       56       NA        5        6
+10 93712       10        2        1       18       NA        1        1
+   RIDEXMON RIDEXAGM DMQMILIZ DMQADFC DMDBORN4 DMDCITZN DMDYRSUS DMDEDUC3
+1         2       27       NA      NA        1        1       NA       NA
+2         1       33       NA      NA        1        1       NA       NA
+3         2       NA        2      NA        1        1       NA       NA
+4         2      222        2      NA        1        1       NA       15
+5         2      158       NA      NA        1        1       NA        6
+6         2       NA        2      NA        2        1        7       NA
+7         1       NA        2      NA        1        1       NA       NA
+8         2       13       NA      NA        1        1       NA       NA
+9         2       NA        2      NA        2        1        6       NA
+10        2      227        2      NA        2        2        5       12
+   DMDEDUC2 DMDMARTL RIDEXPRG SIALANG SIAPROXY SIAINTRP FIALANG FIAPROXY
+1        NA       NA       NA       1        1        2       1        2
+2        NA       NA       NA       1        1        2       1        2
+3         2        3       NA       1        2        2       1        2
+4        NA       NA       NA       1        2        2      NA       NA
+5        NA       NA       NA       1        1        2       1        2
+6         1        1       NA       1        2        1       1        2
+7         4        2       NA       1        2        2       1        2
+8        NA       NA       NA       1        1        2       1        2
+9         5        1       NA       1        2        2       1        2
+10       NA       NA       NA       1        2        2       2        2
+   FIAINTRP MIALANG MIAPROXY MIAINTRP AIALANGA DMDHHSIZ DMDFMSIZ DMDHHSZA
+1         2      NA       NA       NA       NA        5        5        3
+2         2      NA       NA       NA       NA        4        4        2
+3         2       1        2        2        1        1        1        0
+4        NA       1        2        2        1        5        5        0
+5         2       1        2        2        1        7        7        0
+6         2       1        2        1        3        2        2        0
+7         2      NA       NA       NA       NA        1        1        0
+8         2      NA       NA       NA       NA        3        3        1
+9         2       1        2        2        1        3        3        0
+10        2       1        2        2        1        4        4        0
+   DMDHHSZB DMDHHSZE DMDHRGND DMDHRAGZ DMDHREDZ DMDHRMAZ DMDHSEDZ  WTINT2YR
+1         0        0        1        2        3        1        3  9246.492
+2         0        0        1        2        3        1        2 37338.768
+3         0        1        2        4        1        2       NA  8614.571
+4         0        1        1        4        3        1        2  8548.633
+5         3        0        1        3        2        1        3  6769.345
+6         0        2        1        4        1        1        1 13329.451
+7         0        1        2        4        2        2       NA 12043.388
+8         0        0        1        2        3        1        3 16418.298
+9         0        0        1        3        3        1        3 11178.260
+10        2        0        2        3        1        2       NA 29040.497
+    WTMEC2YR SDMVPSU SDMVSTRA INDHHIN2 INDFMIN2 INDFMPIR
+1   8539.731       2      145       15       15     5.00
+2  42566.615       1      143       15       15     5.00
+3   8338.420       2      145        3        3     0.82
+4   8723.440       2      134       NA       NA       NA
+5   7064.610       1      138       10       10     1.88
+6  14372.489       2      138        6        6     1.63
+7  12277.557       1      136        2        2     0.41
+8  16848.020       1      134       15       15     4.90
+9  12390.920       2      134       15       15     5.00
+10 30336.654       2      147        4        4     0.76</code></pre>
 </div>
 </div>
-<p>The <code>echo: false</code> option disables the printing of code (only output is displayed).</p>
+</section>
+<section id="explore-individual-variables-in-the-nhanes-dataset" class="level1">
+<h1>Explore individual variables in the NHANES dataset</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Explore the variables, starting with RIDAGEYR</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(demog<span class="sc">$</span>RIDAGEYR) <span class="co"># How many observations are in this variable?</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 9254</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(demog<span class="sc">$</span>RIDAGEYR) <span class="co"># What type of object is the variable?</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> num [1:9254] 2 2 66 18 13 66 75 0 56 18 ...</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>demog<span class="sc">$</span>RIDAGEYR[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>] <span class="co"># Are there any duplicates in the first few values?</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1]  2  2 66 18 13 66 75  0 56 18</code></pre>
+</div>
+</div>
+</section>
+<section id="check-your-understanding" class="level1">
+<h1>Check your understanding!</h1>
+<p>When you start with a new dataset, be sure to explore every variable. As an example, let’s explore another variable: INDFMPIR * Make a new R code chunk * How long is the INDFMPIR variable? * What type of object is the variable? (for example: character, numeric, etc.) * What are the first few values of the variable?</p>
+<section id="lets-load-additional-datasets-beyond-demographics.-this-includes-blood-cell-counts-metal-levels-and-cotinine-levels" class="level2">
+<h2 class="anchored" data-anchor-id="lets-load-additional-datasets-beyond-demographics.-this-includes-blood-cell-counts-metal-levels-and-cotinine-levels">Let’s load additional datasets, beyond demographics. This includes blood cell counts, metal levels, and cotinine levels</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download Complete Blood Cell Laboratory Data, check the column names</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>cbc <span class="ot">&lt;-</span> <span class="fu">nhanes</span>(<span class="st">"CBC_J"</span>)</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(cbc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "SEQN"     "LBXWBCSI" "LBXLYPCT" "LBXMOPCT" "LBXNEPCT" "LBXEOPCT"
+ [7] "LBXBAPCT" "LBDLYMNO" "LBDMONO"  "LBDNENO"  "LBDEONO"  "LBDBANO" 
+[13] "LBXRBCSI" "LBXHGB"   "LBXHCT"   "LBXMCVSI" "LBXMCHSI" "LBXMC"   
+[19] "LBXRDW"   "LBXPLTSI" "LBXMPSI"  "LBXNRBC" </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download Iron Data, check column names</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>fe <span class="ot">&lt;-</span> <span class="fu">nhanes</span>(<span class="st">"FETIB_J"</span>)</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(fe)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "SEQN"     "LBXIRN"   "LBDIRNSI" "LBXUIB"   "LBDUIBLC" "LBDUIBSI" "LBDTIB"  
+[8] "LBDTIBSI" "LBDPCT"  </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download Arsenic Data, check column names</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>as <span class="ot">&lt;-</span> <span class="fu">nhanes</span>(<span class="st">"UTAS_J"</span>)</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(as)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "SEQN"     "WTSA2YR"  "URXUAS"   "URDUASLC"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download Cadmium and Lead Data, check column names</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>cd_pb <span class="ot">&lt;-</span> <span class="fu">nhanes</span>(<span class="st">"PBCD_J"</span>)</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(cd_pb)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "SEQN"     "LBXBPB"   "LBDBPBSI" "LBDBPBLC" "LBXBCD"   "LBDBCDSI"
+ [7] "LBDBCDLC" "LBXTHG"   "LBDTHGSI" "LBDTHGLC" "LBXBSE"   "LBDBSESI"
+[13] "LBDBSELC" "LBXBMN"   "LBDBMNSI" "LBDBMNLC"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download Cotinine Data, check column names</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>cotinine <span class="ot">&lt;-</span> <span class="fu">nhanes</span>(<span class="st">"COT_J"</span>)</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(cotinine)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "SEQN"     "LBXCOT"   "LBDCOTLC" "LBXHCT"   "LBDHCTLC"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># What variable is the same between the datasets?</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="select-columns-of-datasets-to-keep-only-variables-that-we-will-use-in-the-class" class="level2">
+<h2 class="anchored" data-anchor-id="select-columns-of-datasets-to-keep-only-variables-that-we-will-use-in-the-class">Select columns of datasets to keep only variables that we will use in the class</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># select() is a useful tidyverse function that keeps columns in a dataframe</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="co"># We only want to keep the necessary variables to avoid creating a huge dataset</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a><span class="do">############ Demographics dataset ############</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(demog)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 9254   46</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co">#9254   46</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>demog_select <span class="ot">&lt;-</span> demog <span class="sc">%&gt;%</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(SEQN,     <span class="co">#participant identifier</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>         RIAGENDR, <span class="co">#sex</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>         RIDAGEYR, <span class="co">#age in years</span></span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>         RIDRETH1, <span class="co">#race in number code</span></span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>         INDFMPIR, <span class="co">#poverty-income ratio</span></span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>         DMDEDUC3, <span class="co">#education categories for age 6-19</span></span>
+<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a>         DMDEDUC2, <span class="co">#education categories for age 20+</span></span>
+<span id="cb47-10"><a href="#cb47-10" aria-hidden="true" tabindex="-1"></a>         <span class="co">#these two are for later (survey weighting)</span></span>
+<span id="cb47-11"><a href="#cb47-11" aria-hidden="true" tabindex="-1"></a>         SDMVSTRA, <span class="co">#Strata: based on census region, metropolitan area, or population demographics</span></span>
+<span id="cb47-12"><a href="#cb47-12" aria-hidden="true" tabindex="-1"></a>         SDMVPSU   <span class="co">#Primary Sampling Unit: 30 per nhanes cycle - mostly single counties, selected from strata</span></span>
+<span id="cb47-13"><a href="#cb47-13" aria-hidden="true" tabindex="-1"></a>         ) <span class="sc">%&gt;%</span></span>
+<span id="cb47-14"><a href="#cb47-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">RIASEX =</span> RIAGENDR) <span class="co">#rename RIAGENDR to be RIASEX because NHANES asked about sex, not gender</span></span>
+<span id="cb47-15"><a href="#cb47-15" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(demog_select)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 9254    9</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co">#9254    9 - number of rows does not change</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a><span class="do">############ Complete blood count dataset ############</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(cbc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 8366   22</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co">#8366   22</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>cbc_select <span class="ot">&lt;-</span> cbc <span class="sc">%&gt;%</span></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(SEQN,</span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>         LBXRBCSI,</span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>         LBXWBCSI,</span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>         LBDLYMNO,</span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>         LBDNENO)</span>
+<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(cbc_select)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 8366    5</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="co">#8366    2</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a><span class="do">############ Iron dataset ############</span></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(fe)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 6401    9</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="co">#6401    9</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>fe_select <span class="ot">&lt;-</span> fe <span class="sc">%&gt;%</span></span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(SEQN,</span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>         LBXIRN)</span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(fe_select)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 6401    2</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="co">#6401    2</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a><span class="do">############ Arsenic dataset ############</span></span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(as)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2979    4</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="co">#2979    4</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>as_select <span class="ot">&lt;-</span> as <span class="sc">%&gt;%</span></span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(SEQN,</span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>         URXUAS)</span>
+<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(as_select)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2979    2</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="co">#2979    2</span></span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a><span class="do">############ Cadmium/Lead dataset ############</span></span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(cd_pb)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 8366   16</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="co">#8366   16</span></span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>cd_pb_select <span class="ot">&lt;-</span> cd_pb <span class="sc">%&gt;%</span></span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(SEQN,</span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a>         LBXBCD,</span>
+<span id="cb63-5"><a href="#cb63-5" aria-hidden="true" tabindex="-1"></a>         LBXBPB)</span>
+<span id="cb63-6"><a href="#cb63-6" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(cd_pb_select)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 8366    3</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="co">#8366    3</span></span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a><span class="do">############ Cotinine dataset ############</span></span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(cotinine)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 7936    5</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="co">#7936    5</span></span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>cotinine_select <span class="ot">&lt;-</span> cotinine <span class="sc">%&gt;%</span></span>
+<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(SEQN,</span>
+<span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a>         LBXCOT)</span>
+<span id="cb67-5"><a href="#cb67-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(cotinine_select)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 7936    2</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="co">#7936    2</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="one-dataset-at-a-time-join-all-datasets-with-the-demographics-dataset" class="level2">
+<h2 class="anchored" data-anchor-id="one-dataset-at-a-time-join-all-datasets-with-the-demographics-dataset">One dataset at a time, join all datasets with the demographics dataset</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Merge the demographics and complete blood count datasets</span></span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>demog_cbc <span class="ot">&lt;-</span> <span class="fu">left_join</span>(demog_select, cbc_select, <span class="at">by =</span> <span class="st">"SEQN"</span>)</span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the merge - How many participants and variables do you expect?</span></span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(demog_cbc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>'data.frame':   9254 obs. of  13 variables:
+ $ SEQN    : num  93703 93704 93705 93706 93707 ...
+ $ RIASEX  : num  2 1 2 1 1 2 2 2 1 1 ...
+ $ RIDAGEYR: num  2 2 66 18 13 66 75 0 56 18 ...
+ $ RIDRETH1: num  5 3 4 5 5 5 4 3 5 1 ...
+ $ INDFMPIR: num  5 5 0.82 NA 1.88 1.63 0.41 4.9 5 0.76 ...
+ $ DMDEDUC3: num  NA NA NA 15 6 NA NA NA NA 12 ...
+ $ DMDEDUC2: num  NA NA 2 NA NA 1 4 NA 5 NA ...
+ $ SDMVSTRA: num  145 143 145 134 138 138 136 134 134 147 ...
+ $ SDMVPSU : num  2 1 2 2 1 2 1 1 2 2 ...
+ $ LBXRBCSI: num  NA 4.25 5.48 5.24 5.02 4.59 5.13 NA 4.65 5.12 ...
+ $ LBXWBCSI: num  NA 7.4 8.6 6.1 11.2 6 7.2 NA 5 7.1 ...
+ $ LBDLYMNO: num  NA 3.5 3.4 1.5 4.2 1.9 1.9 NA 1.8 2.2 ...
+ $ LBDNENO : num  NA 3.2 4.2 3.7 6.1 3.6 4.8 NA 2.7 4.2 ...</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb72"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Merge the previous dataset and iron dataset</span></span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>demog_cbc_fe <span class="ot">&lt;-</span> <span class="fu">left_join</span>(demog_cbc, fe_select, <span class="at">by =</span> <span class="st">"SEQN"</span>)</span>
+<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the merge - How many participants and variables do you expect?</span></span>
+<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(demog_cbc_fe)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>'data.frame':   9254 obs. of  14 variables:
+ $ SEQN    : num  93703 93704 93705 93706 93707 ...
+ $ RIASEX  : num  2 1 2 1 1 2 2 2 1 1 ...
+ $ RIDAGEYR: num  2 2 66 18 13 66 75 0 56 18 ...
+ $ RIDRETH1: num  5 3 4 5 5 5 4 3 5 1 ...
+ $ INDFMPIR: num  5 5 0.82 NA 1.88 1.63 0.41 4.9 5 0.76 ...
+ $ DMDEDUC3: num  NA NA NA 15 6 NA NA NA NA 12 ...
+ $ DMDEDUC2: num  NA NA 2 NA NA 1 4 NA 5 NA ...
+ $ SDMVSTRA: num  145 143 145 134 138 138 136 134 134 147 ...
+ $ SDMVPSU : num  2 1 2 2 1 2 1 1 2 2 ...
+ $ LBXRBCSI: num  NA 4.25 5.48 5.24 5.02 4.59 5.13 NA 4.65 5.12 ...
+ $ LBXWBCSI: num  NA 7.4 8.6 6.1 11.2 6 7.2 NA 5 7.1 ...
+ $ LBDLYMNO: num  NA 3.5 3.4 1.5 4.2 1.9 1.9 NA 1.8 2.2 ...
+ $ LBDNENO : num  NA 3.2 4.2 3.7 6.1 3.6 4.8 NA 2.7 4.2 ...
+ $ LBXIRN  : num  NA NA 92 164 91 90 63 NA 56 225 ...</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb74"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Merge the previous dataset and arsenic dataset</span></span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>demog_cbc_fe_as <span class="ot">&lt;-</span> <span class="fu">left_join</span>(demog_cbc_fe, as_select, <span class="at">by =</span> <span class="st">"SEQN"</span>)</span>
+<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the merge - How many participants and variables do you expect?</span></span>
+<span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(demog_cbc_fe_as)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>'data.frame':   9254 obs. of  15 variables:
+ $ SEQN    : num  93703 93704 93705 93706 93707 ...
+ $ RIASEX  : num  2 1 2 1 1 2 2 2 1 1 ...
+ $ RIDAGEYR: num  2 2 66 18 13 66 75 0 56 18 ...
+ $ RIDRETH1: num  5 3 4 5 5 5 4 3 5 1 ...
+ $ INDFMPIR: num  5 5 0.82 NA 1.88 1.63 0.41 4.9 5 0.76 ...
+ $ DMDEDUC3: num  NA NA NA 15 6 NA NA NA NA 12 ...
+ $ DMDEDUC2: num  NA NA 2 NA NA 1 4 NA 5 NA ...
+ $ SDMVSTRA: num  145 143 145 134 138 138 136 134 134 147 ...
+ $ SDMVPSU : num  2 1 2 2 1 2 1 1 2 2 ...
+ $ LBXRBCSI: num  NA 4.25 5.48 5.24 5.02 4.59 5.13 NA 4.65 5.12 ...
+ $ LBXWBCSI: num  NA 7.4 8.6 6.1 11.2 6 7.2 NA 5 7.1 ...
+ $ LBDLYMNO: num  NA 3.5 3.4 1.5 4.2 1.9 1.9 NA 1.8 2.2 ...
+ $ LBDNENO : num  NA 3.2 4.2 3.7 6.1 3.6 4.8 NA 2.7 4.2 ...
+ $ LBXIRN  : num  NA NA 92 164 91 90 63 NA 56 225 ...
+ $ URXUAS  : num  NA NA NA NA 5.09 ...</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Merge the previous dataset and cadmium/lead dataset</span></span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>demog_cbc_fe_as_cdpb <span class="ot">&lt;-</span> <span class="fu">left_join</span>(demog_cbc_fe_as, cd_pb_select, <span class="at">by =</span> <span class="st">"SEQN"</span>)</span>
+<span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the merge - How many participants and variables do you expect?</span></span>
+<span id="cb76-4"><a href="#cb76-4" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(demog_cbc_fe_as_cdpb)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>'data.frame':   9254 obs. of  17 variables:
+ $ SEQN    : num  93703 93704 93705 93706 93707 ...
+ $ RIASEX  : num  2 1 2 1 1 2 2 2 1 1 ...
+ $ RIDAGEYR: num  2 2 66 18 13 66 75 0 56 18 ...
+ $ RIDRETH1: num  5 3 4 5 5 5 4 3 5 1 ...
+ $ INDFMPIR: num  5 5 0.82 NA 1.88 1.63 0.41 4.9 5 0.76 ...
+ $ DMDEDUC3: num  NA NA NA 15 6 NA NA NA NA 12 ...
+ $ DMDEDUC2: num  NA NA 2 NA NA 1 4 NA 5 NA ...
+ $ SDMVSTRA: num  145 143 145 134 138 138 136 134 134 147 ...
+ $ SDMVPSU : num  2 1 2 2 1 2 1 1 2 2 ...
+ $ LBXRBCSI: num  NA 4.25 5.48 5.24 5.02 4.59 5.13 NA 4.65 5.12 ...
+ $ LBXWBCSI: num  NA 7.4 8.6 6.1 11.2 6 7.2 NA 5 7.1 ...
+ $ LBDLYMNO: num  NA 3.5 3.4 1.5 4.2 1.9 1.9 NA 1.8 2.2 ...
+ $ LBDNENO : num  NA 3.2 4.2 3.7 6.1 3.6 4.8 NA 2.7 4.2 ...
+ $ LBXIRN  : num  NA NA 92 164 91 90 63 NA 56 225 ...
+ $ URXUAS  : num  NA NA NA NA 5.09 ...
+ $ LBXBCD  : num  NA 0.07 0.24 0.21 0.14 0.73 1.08 NA 0.38 0.26 ...
+ $ LBXBPB  : num  NA NA 2.98 0.74 0.39 1.53 1.31 NA 2.15 0.27 ...</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Merge the previous dataset and cotinine dataset</span></span>
+<span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Note, the variable label for SEQN in the cotinine dataset from NHANES has a different capitalization pattern, so R recognizes this as a different variable from the SEQN variable in all of the other datasets. Let's strip the label from that variable and then do the merge.</span></span>
+<span id="cb78-3"><a href="#cb78-3" aria-hidden="true" tabindex="-1"></a>demog_cbc_fe_as_cdpb <span class="ot">&lt;-</span> <span class="fu">remove_label</span>(demog_cbc_fe_as_cdpb, SEQN)</span>
+<span id="cb78-4"><a href="#cb78-4" aria-hidden="true" tabindex="-1"></a>cotinine_select <span class="ot">&lt;-</span> <span class="fu">remove_label</span>(cotinine_select, SEQN)</span>
+<span id="cb78-5"><a href="#cb78-5" aria-hidden="true" tabindex="-1"></a>nhanes <span class="ot">&lt;-</span> <span class="fu">left_join</span>(demog_cbc_fe_as_cdpb, cotinine_select, <span class="at">by =</span> <span class="st">"SEQN"</span>)</span>
+<span id="cb78-6"><a href="#cb78-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the merge - How many participants and variables do you expect?</span></span>
+<span id="cb78-7"><a href="#cb78-7" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(nhanes)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>'data.frame':   9254 obs. of  18 variables:
+ $ SEQN    : num  93703 93704 93705 93706 93707 ...
+ $ RIASEX  : num  2 1 2 1 1 2 2 2 1 1 ...
+ $ RIDAGEYR: num  2 2 66 18 13 66 75 0 56 18 ...
+ $ RIDRETH1: num  5 3 4 5 5 5 4 3 5 1 ...
+ $ INDFMPIR: num  5 5 0.82 NA 1.88 1.63 0.41 4.9 5 0.76 ...
+ $ DMDEDUC3: num  NA NA NA 15 6 NA NA NA NA 12 ...
+ $ DMDEDUC2: num  NA NA 2 NA NA 1 4 NA 5 NA ...
+ $ SDMVSTRA: num  145 143 145 134 138 138 136 134 134 147 ...
+ $ SDMVPSU : num  2 1 2 2 1 2 1 1 2 2 ...
+ $ LBXRBCSI: num  NA 4.25 5.48 5.24 5.02 4.59 5.13 NA 4.65 5.12 ...
+ $ LBXWBCSI: num  NA 7.4 8.6 6.1 11.2 6 7.2 NA 5 7.1 ...
+ $ LBDLYMNO: num  NA 3.5 3.4 1.5 4.2 1.9 1.9 NA 1.8 2.2 ...
+ $ LBDNENO : num  NA 3.2 4.2 3.7 6.1 3.6 4.8 NA 2.7 4.2 ...
+ $ LBXIRN  : num  NA NA 92 164 91 90 63 NA 56 225 ...
+ $ URXUAS  : num  NA NA NA NA 5.09 ...
+ $ LBXBCD  : num  NA 0.07 0.24 0.21 0.14 0.73 1.08 NA 0.38 0.26 ...
+ $ LBXBPB  : num  NA NA 2.98 0.74 0.39 1.53 1.31 NA 2.15 0.27 ...
+ $ LBXCOT  : num  NA NA 0.028 0.138 0.555 0.011 54.3 NA 0.057 13.4 ...</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="co"># This is our joined dataset!</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="create-a-new-continuous-variable-from-other-continuous-variables" class="level2">
+<h2 class="anchored" data-anchor-id="create-a-new-continuous-variable-from-other-continuous-variables">Create a new continuous variable from other continuous variables</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a neutrophil:lymphocyte ratio variable (NLR)</span></span>
+<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a>nhanes <span class="ot">&lt;-</span> nhanes <span class="sc">%&gt;%</span></span>
+<span id="cb81-3"><a href="#cb81-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">nlr =</span> LBDNENO <span class="sc">/</span> LBDLYMNO) </span>
+<span id="cb81-4"><a href="#cb81-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb81-5"><a href="#cb81-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb81-6"><a href="#cb81-6" aria-hidden="true" tabindex="-1"></a><span class="co"># View the new variable to look at the changes</span></span>
+<span id="cb81-7"><a href="#cb81-7" aria-hidden="true" tabindex="-1"></a>nhanes <span class="sc">%&gt;%</span></span>
+<span id="cb81-8"><a href="#cb81-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(SEQN,</span>
+<span id="cb81-9"><a href="#cb81-9" aria-hidden="true" tabindex="-1"></a>         LBDNENO,</span>
+<span id="cb81-10"><a href="#cb81-10" aria-hidden="true" tabindex="-1"></a>         LBDLYMNO,</span>
+<span id="cb81-11"><a href="#cb81-11" aria-hidden="true" tabindex="-1"></a>         nlr) <span class="sc">%&gt;%</span></span>
+<span id="cb81-12"><a href="#cb81-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   SEQN LBDNENO LBDLYMNO       nlr
+1 93703      NA       NA        NA
+2 93704     3.2      3.5 0.9142857
+3 93705     4.2      3.4 1.2352941
+4 93706     3.7      1.5 2.4666667
+5 93707     6.1      4.2 1.4523810
+6 93708     3.6      1.9 1.8947368</code></pre>
+</div>
+</div>
+</section>
+<section id="create-a-categorical-variable-from-a-continuous-variable" class="level2">
+<h2 class="anchored" data-anchor-id="create-a-categorical-variable-from-a-continuous-variable">Create a categorical variable from a continuous variable</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb83"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a> <span class="co"># How many participants do you expect in each of the iron status groups?</span></span>
+<span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(nhanes<span class="sc">$</span>LBXIRN <span class="sc">&lt;</span> <span class="dv">60</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1376</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb85"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(nhanes<span class="sc">$</span>LBXIRN <span class="sc">&gt;=</span> <span class="dv">60</span> <span class="sc">&amp;</span> nhanes<span class="sc">$</span>LBXIRN <span class="sc">&lt;=</span> <span class="dv">170</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 4404</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb87"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(nhanes<span class="sc">$</span>LBXIRN <span class="sc">&gt;</span> <span class="dv">170</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 142</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a categorical variable of iron status based on serum concentrations</span></span>
+<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a>nhanes <span class="ot">&lt;-</span> nhanes <span class="sc">%&gt;%</span></span>
+<span id="cb89-3"><a href="#cb89-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">iron_status =</span> <span class="fu">case_when</span>(LBXIRN <span class="sc">&lt;</span> <span class="dv">60</span> <span class="sc">~</span> <span class="st">"Deficient"</span>,</span>
+<span id="cb89-4"><a href="#cb89-4" aria-hidden="true" tabindex="-1"></a>                                 LBXIRN <span class="sc">&gt;</span> <span class="dv">170</span> <span class="sc">~</span> <span class="st">"Excessive"</span>,</span>
+<span id="cb89-5"><a href="#cb89-5" aria-hidden="true" tabindex="-1"></a>                                 LBXIRN <span class="sc">&gt;=</span> <span class="dv">60</span> <span class="sc">&amp;</span> LBXIRN <span class="sc">&lt;=</span> <span class="dv">170</span> <span class="sc">~</span> <span class="st">"Normal"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb89-6"><a href="#cb89-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">iron_status =</span> <span class="fu">relevel</span>(<span class="fu">factor</span>(iron_status),</span>
+<span id="cb89-7"><a href="#cb89-7" aria-hidden="true" tabindex="-1"></a>                               <span class="at">ref =</span> <span class="st">"Deficient"</span>))</span>
+<span id="cb89-8"><a href="#cb89-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb89-9"><a href="#cb89-9" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(nhanes<span class="sc">$</span>iron_status) <span class="co"># How many participants did you get in each group?</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Deficient Excessive    Normal 
+     1376       142      4404 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb91"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the structure of the dataset to see that iron_status is after LBXIRN and it is a factor with reference = "Deficient"</span></span>
+<span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(nhanes<span class="sc">$</span>iron_status)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Factor w/ 3 levels "Deficient","Excessive",..: NA NA 3 3 3 3 3 NA 1 2 ...</code></pre>
+</div>
+</div>
+</section>
+<section id="use-the-cut-function-to-slice-a-numeric-variable-into-groups" class="level2">
+<h2 class="anchored" data-anchor-id="use-the-cut-function-to-slice-a-numeric-variable-into-groups">Use the cut function to slice a numeric variable into groups</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb93"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Make groups of equal range</span></span>
+<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a>nhanes <span class="ot">&lt;-</span> nhanes <span class="sc">%&gt;%</span></span>
+<span id="cb93-3"><a href="#cb93-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">age_groups =</span> <span class="fu">cut_interval</span>(RIDAGEYR, <span class="at">n =</span> <span class="dv">5</span>)) </span>
+<span id="cb93-4"><a href="#cb93-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb93-5"><a href="#cb93-5" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(nhanes<span class="sc">$</span>age_groups) <span class="co"># How many participants did you get in each group?</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+ [0,16] (16,32] (32,48] (48,64] (64,80] 
+   3250    1519    1349    1636    1500 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb95"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Other options:</span></span>
+<span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb95-3"><a href="#cb95-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Five groups with approximately equal numbers of participants (cut_number())</span></span>
+<span id="cb95-4"><a href="#cb95-4" aria-hidden="true" tabindex="-1"></a>nhanes <span class="ot">&lt;-</span> nhanes <span class="sc">%&gt;%</span></span>
+<span id="cb95-5"><a href="#cb95-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cut_groups =</span> <span class="fu">cut_number</span>(RIDAGEYR, <span class="at">n =</span> <span class="dv">5</span>))</span>
+<span id="cb95-6"><a href="#cb95-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb95-7"><a href="#cb95-7" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(nhanes<span class="sc">$</span>cut_groups) <span class="co"># How many participants did you get in each group?</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+  [0,8]  (8,20] (20,42] (42,62] (62,80] 
+   1904    1857    1868    1884    1741 </code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="check-your-understanding-1" class="level1">
+<h1>Check your understanding!</h1>
+<p>Serum cotinine is a continuous variable in our dataset. Let’s use it to create a two-level categorical variable for nonsmoking versus smoking. Nonsmoking status can be defined as serum cotinine values less than or equal to 10 ng/mL (Pirkle et al., 1996). * Make a new R code chunk * Make a new factor variable for smoking status * The variable should have the level “smoking” for cotinine greater than 10 * The variable should have the level “nonsmoking” for cotinine less than or equal to 10 * How many observations are in the nonsmoking category? In the smoking category?</p>
+<section id="convert-sex-and-raceethnicity-variables-from-numeric-to-factors" class="level2">
+<h2 class="anchored" data-anchor-id="convert-sex-and-raceethnicity-variables-from-numeric-to-factors">Convert sex and race/ethnicity variables from numeric to factors</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb97"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Update sex variable</span></span>
+<span id="cb97-2"><a href="#cb97-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Check initial counts and data type</span></span>
+<span id="cb97-3"><a href="#cb97-3" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(nhanes<span class="sc">$</span>RIASEX)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+   1    2 
+4557 4697 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb99"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(nhanes<span class="sc">$</span>RIASEX)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> num [1:9254] 2 1 2 1 1 2 2 2 1 1 ...</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb101"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Update sex from numbers to characters</span></span>
+<span id="cb101-2"><a href="#cb101-2" aria-hidden="true" tabindex="-1"></a>nhanes <span class="ot">&lt;-</span> nhanes <span class="sc">%&gt;%</span></span>
+<span id="cb101-3"><a href="#cb101-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">sex =</span> <span class="fu">case_when</span>(RIASEX <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="st">"Male"</span>,</span>
+<span id="cb101-4"><a href="#cb101-4" aria-hidden="true" tabindex="-1"></a>                         RIASEX <span class="sc">==</span> <span class="dv">2</span> <span class="sc">~</span> <span class="st">"Female"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb101-5"><a href="#cb101-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">sex =</span> <span class="fu">factor</span>(sex))   <span class="sc">%&gt;%</span>         <span class="co">#change the character variables into factor variables</span></span>
+<span id="cb101-6"><a href="#cb101-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">sex =</span> <span class="fu">relevel</span>(sex,               <span class="co">#set the reference levels</span></span>
+<span id="cb101-7"><a href="#cb101-7" aria-hidden="true" tabindex="-1"></a>                       <span class="at">ref =</span> <span class="st">"Male"</span>))</span>
+<span id="cb101-8"><a href="#cb101-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb101-9"><a href="#cb101-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the count and data type of the new variable</span></span>
+<span id="cb101-10"><a href="#cb101-10" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(nhanes<span class="sc">$</span>sex)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+  Male Female 
+  4557   4697 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb103"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb103-1"><a href="#cb103-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(nhanes<span class="sc">$</span>sex)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Factor w/ 2 levels "Male","Female": 2 1 2 1 1 2 2 2 1 1 ...</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb105"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb105-1"><a href="#cb105-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Do the counts still match?</span></span>
+<span id="cb105-2"><a href="#cb105-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb105-3"><a href="#cb105-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb105-4"><a href="#cb105-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Update race/ethnicity variable</span></span>
+<span id="cb105-5"><a href="#cb105-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the initial counts and data type</span></span>
+<span id="cb105-6"><a href="#cb105-6" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(nhanes<span class="sc">$</span>RIDRETH1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+   1    2    3    4    5 
+1367  820 3150 2115 1802 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb107"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(nhanes<span class="sc">$</span>RIDRETH1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> num [1:9254] 5 3 4 5 5 5 4 3 5 1 ...</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb109"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Update race/ethnicity from numbers to characters</span></span>
+<span id="cb109-2"><a href="#cb109-2" aria-hidden="true" tabindex="-1"></a>nhanes <span class="ot">&lt;-</span> nhanes <span class="sc">%&gt;%</span></span>
+<span id="cb109-3"><a href="#cb109-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">race_eth =</span> <span class="fu">case_when</span>(RIDRETH1 <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="st">"Mexican American"</span>,</span>
+<span id="cb109-4"><a href="#cb109-4" aria-hidden="true" tabindex="-1"></a>                              RIDRETH1 <span class="sc">==</span> <span class="dv">2</span> <span class="sc">~</span> <span class="st">"Other Hispanic"</span>,</span>
+<span id="cb109-5"><a href="#cb109-5" aria-hidden="true" tabindex="-1"></a>                              RIDRETH1 <span class="sc">==</span> <span class="dv">3</span> <span class="sc">~</span> <span class="st">"Non-Hispanic White"</span>,</span>
+<span id="cb109-6"><a href="#cb109-6" aria-hidden="true" tabindex="-1"></a>                              RIDRETH1 <span class="sc">==</span> <span class="dv">4</span> <span class="sc">~</span> <span class="st">"Non-Hispanic Black"</span>,</span>
+<span id="cb109-7"><a href="#cb109-7" aria-hidden="true" tabindex="-1"></a>                              RIDRETH1 <span class="sc">==</span> <span class="dv">5</span> <span class="sc">~</span> <span class="st">"Other Race"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb109-8"><a href="#cb109-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">race_eth =</span> <span class="fu">factor</span>(race_eth)) <span class="sc">%&gt;%</span> <span class="co">#change the character variables into factor variables</span></span>
+<span id="cb109-9"><a href="#cb109-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">race_eth =</span> <span class="fu">relevel</span>(race_eth, <span class="co">#set the reference levels</span></span>
+<span id="cb109-10"><a href="#cb109-10" aria-hidden="true" tabindex="-1"></a>                            <span class="at">ref =</span> <span class="st">"Non-Hispanic White"</span>)) </span>
+<span id="cb109-11"><a href="#cb109-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb109-12"><a href="#cb109-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the count and data type of the new variable</span></span>
+<span id="cb109-13"><a href="#cb109-13" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(nhanes<span class="sc">$</span>race_eth)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Non-Hispanic White   Mexican American Non-Hispanic Black     Other Hispanic 
+              3150               1367               2115                820 
+        Other Race 
+              1802 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb111"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(nhanes<span class="sc">$</span>race_eth)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Factor w/ 5 levels "Non-Hispanic White",..: 5 1 3 5 5 5 3 1 5 2 ...</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb113"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb113-1"><a href="#cb113-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Do the counts still match?</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="clean-and-convert-the-education-variables-from-numeric-to-factors" class="level2">
+<h2 class="anchored" data-anchor-id="clean-and-convert-the-education-variables-from-numeric-to-factors">Clean and convert the education variables from numeric to factors</h2>
+<ul>
+<li><strong>https://wwwn.cdc.gov/Nchs/Nhanes/2017-2018/DEMO_J.htm</strong></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb114"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb114-1"><a href="#cb114-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Education variable for youth </span></span>
+<span id="cb114-2"><a href="#cb114-2" aria-hidden="true" tabindex="-1"></a><span class="co"># DMDEDUC3 - participants 6 - 19 years old</span></span>
+<span id="cb114-3"><a href="#cb114-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check original counts of DMDEDUC3</span></span>
+<span id="cb114-4"><a href="#cb114-4" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(nhanes<span class="sc">$</span>RIDAGEYR <span class="sc">&lt;</span> <span class="dv">20</span>, <span class="at">useNA =</span> <span class="st">"always"</span>) <span class="co">#3685 participants under 20</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+FALSE  TRUE  &lt;NA&gt; 
+ 5569  3685     0 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb116"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb116-1"><a href="#cb116-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(nhanes<span class="sc">$</span>DMDEDUC3, <span class="at">useNA =</span> <span class="st">"always"</span>) <span class="co">#values 0-15 and 66</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+   0    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15 
+ 184  176  202  202  179  199  154  151  154  154  139  155   20  150    5   71 
+  66 &lt;NA&gt; 
+  11 6948 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb118"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb118-1"><a href="#cb118-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(nhanes<span class="sc">$</span>DMDEDUC3 <span class="sc">&gt;=</span> <span class="dv">0</span>, <span class="at">useNA =</span> <span class="st">"always"</span>) <span class="co">#2306 youth participants with education reported</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+TRUE &lt;NA&gt; 
+2306 6948 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb120"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb120-1"><a href="#cb120-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Update the numeric codes to categories</span></span>
+<span id="cb120-2"><a href="#cb120-2" aria-hidden="true" tabindex="-1"></a>nhanes <span class="ot">&lt;-</span> nhanes <span class="sc">%&gt;%</span></span>
+<span id="cb120-3"><a href="#cb120-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">education_youth =</span> <span class="fu">case_when</span>(DMDEDUC3 <span class="sc">&gt;=</span> <span class="dv">0</span> <span class="sc">&amp;</span> DMDEDUC3 <span class="sc">&lt;=</span> <span class="dv">5</span> <span class="sc">~</span> <span class="st">"Less than 5th grade"</span>,</span>
+<span id="cb120-4"><a href="#cb120-4" aria-hidden="true" tabindex="-1"></a>                                DMDEDUC3 <span class="sc">&gt;=</span> <span class="dv">6</span> <span class="sc">&amp;</span> DMDEDUC3 <span class="sc">&lt;=</span> <span class="dv">12</span> <span class="sc">|</span> DMDEDUC3 <span class="sc">==</span> <span class="dv">66</span> <span class="sc">~</span> <span class="st">"Less than high school"</span>,</span>
+<span id="cb120-5"><a href="#cb120-5" aria-hidden="true" tabindex="-1"></a>                                DMDEDUC3 <span class="sc">==</span> <span class="dv">13</span> <span class="sc">|</span> DMDEDUC3 <span class="sc">==</span> <span class="dv">14</span> <span class="sc">~</span> <span class="st">"High school or GED"</span>,</span>
+<span id="cb120-6"><a href="#cb120-6" aria-hidden="true" tabindex="-1"></a>                                DMDEDUC3 <span class="sc">==</span> <span class="dv">15</span> <span class="sc">~</span> <span class="st">"More than high school"</span>)) </span>
+<span id="cb120-7"><a href="#cb120-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb120-8"><a href="#cb120-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the counts</span></span>
+<span id="cb120-9"><a href="#cb120-9" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(nhanes<span class="sc">$</span>education_youth, <span class="at">useNA =</span> <span class="st">"always"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+   High school or GED   Less than 5th grade Less than high school 
+                  155                  1142                   938 
+More than high school                  &lt;NA&gt; 
+                   71                  6948 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb122"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb122-1"><a href="#cb122-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Education variable for adults</span></span>
+<span id="cb122-2"><a href="#cb122-2" aria-hidden="true" tabindex="-1"></a><span class="co"># DMDEDUC2 - participants 20+ years old</span></span>
+<span id="cb122-3"><a href="#cb122-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check original counts of DMDEDUC2</span></span>
+<span id="cb122-4"><a href="#cb122-4" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(nhanes<span class="sc">$</span>RIDAGEYR <span class="sc">&gt;=</span> <span class="dv">20</span>, <span class="at">useNA =</span> <span class="st">"always"</span>) <span class="co">#5569 participants 20+ years</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+FALSE  TRUE  &lt;NA&gt; 
+ 3685  5569     0 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb124"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb124-1"><a href="#cb124-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(nhanes<span class="sc">$</span>DMDEDUC2, <span class="at">useNA =</span> <span class="st">"always"</span>) <span class="co">#values 1-5, 7, 9</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+   1    2    3    4    5    7    9 &lt;NA&gt; 
+ 479  638 1325 1778 1336    2   11 3685 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb126"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb126-1"><a href="#cb126-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(nhanes<span class="sc">$</span>DMDEDUC2 <span class="sc">&gt;=</span> <span class="dv">0</span>, <span class="at">useNA =</span> <span class="st">"always"</span>) <span class="co">#5569 adult participants with education data (13 with 7 or 9)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+TRUE &lt;NA&gt; 
+5569 3685 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb128"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb128-1"><a href="#cb128-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Update the numeric codes to categories</span></span>
+<span id="cb128-2"><a href="#cb128-2" aria-hidden="true" tabindex="-1"></a>nhanes <span class="ot">&lt;-</span> nhanes <span class="sc">%&gt;%</span></span>
+<span id="cb128-3"><a href="#cb128-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">education_adult =</span> <span class="fu">case_when</span>(DMDEDUC2 <span class="sc">==</span> <span class="dv">1</span> <span class="sc">|</span> DMDEDUC2 <span class="sc">==</span> <span class="dv">2</span> <span class="sc">~</span> <span class="st">"Less than high school"</span>,</span>
+<span id="cb128-4"><a href="#cb128-4" aria-hidden="true" tabindex="-1"></a>                                 DMDEDUC2 <span class="sc">==</span> <span class="dv">3</span> <span class="sc">~</span> <span class="st">"High school or GED"</span>,</span>
+<span id="cb128-5"><a href="#cb128-5" aria-hidden="true" tabindex="-1"></a>                                 DMDEDUC2 <span class="sc">==</span> <span class="dv">4</span> <span class="sc">|</span> DMDEDUC2 <span class="sc">==</span> <span class="dv">5</span> <span class="sc">~</span> <span class="st">"More than high school"</span>,</span>
+<span id="cb128-6"><a href="#cb128-6" aria-hidden="true" tabindex="-1"></a>                                 DMDEDUC2 <span class="sc">==</span> <span class="dv">7</span> <span class="sc">|</span> DMDEDUC2 <span class="sc">==</span> <span class="dv">9</span> <span class="sc">~</span> <span class="st">"Unknown"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb128-7"><a href="#cb128-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">education_adult =</span> <span class="fu">na_if</span>(education_adult, <span class="st">"Unknown"</span>)) <span class="co">#Make all the "Unknown" values missing</span></span>
+<span id="cb128-8"><a href="#cb128-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb128-9"><a href="#cb128-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the counts</span></span>
+<span id="cb128-10"><a href="#cb128-10" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(nhanes<span class="sc">$</span>education_adult, <span class="at">useNA =</span> <span class="st">"always"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+   High school or GED Less than high school More than high school 
+                 1325                  1117                  3114 
+                 &lt;NA&gt; 
+                 3698 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb130"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb130-1"><a href="#cb130-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine the two education variables</span></span>
+<span id="cb130-2"><a href="#cb130-2" aria-hidden="true" tabindex="-1"></a>nhanes <span class="ot">&lt;-</span> nhanes <span class="sc">%&gt;%</span></span>
+<span id="cb130-3"><a href="#cb130-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">education =</span> <span class="fu">coalesce</span>(education_youth,</span>
+<span id="cb130-4"><a href="#cb130-4" aria-hidden="true" tabindex="-1"></a>                              education_adult)) <span class="sc">%&gt;%</span></span>
+<span id="cb130-5"><a href="#cb130-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Set the factor levels and reference for education, reorder the columns</span></span>
+<span id="cb130-6"><a href="#cb130-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">education =</span> <span class="fu">relevel</span>(<span class="fu">factor</span>(education, </span>
+<span id="cb130-7"><a href="#cb130-7" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Less than 5th grade"</span>,</span>
+<span id="cb130-8"><a href="#cb130-8" aria-hidden="true" tabindex="-1"></a>                                               <span class="st">"Less than high school"</span>,</span>
+<span id="cb130-9"><a href="#cb130-9" aria-hidden="true" tabindex="-1"></a>                                               <span class="st">"High school or GED"</span>,</span>
+<span id="cb130-10"><a href="#cb130-10" aria-hidden="true" tabindex="-1"></a>                                               <span class="st">"More than high school"</span>)),</span>
+<span id="cb130-11"><a href="#cb130-11" aria-hidden="true" tabindex="-1"></a>                             <span class="at">ref =</span> <span class="st">"Less than high school"</span>))</span>
+<span id="cb130-12"><a href="#cb130-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb130-13"><a href="#cb130-13" aria-hidden="true" tabindex="-1"></a><span class="co"># View the new columns</span></span>
+<span id="cb130-14"><a href="#cb130-14" aria-hidden="true" tabindex="-1"></a>nhanes <span class="sc">%&gt;%</span> </span>
+<span id="cb130-15"><a href="#cb130-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(education_youth,</span>
+<span id="cb130-16"><a href="#cb130-16" aria-hidden="true" tabindex="-1"></a>         education_adult,</span>
+<span id="cb130-17"><a href="#cb130-17" aria-hidden="true" tabindex="-1"></a>         education) <span class="sc">%&gt;%</span></span>
+<span id="cb130-18"><a href="#cb130-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        education_youth       education_adult             education
+1                  &lt;NA&gt;                  &lt;NA&gt;                  &lt;NA&gt;
+2                  &lt;NA&gt;                  &lt;NA&gt;                  &lt;NA&gt;
+3                  &lt;NA&gt; Less than high school Less than high school
+4 More than high school                  &lt;NA&gt; More than high school
+5 Less than high school                  &lt;NA&gt; Less than high school
+6                  &lt;NA&gt; Less than high school Less than high school</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb132"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb132-1"><a href="#cb132-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the counts</span></span>
+<span id="cb132-2"><a href="#cb132-2" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(nhanes<span class="sc">$</span>education, <span class="at">useNA =</span> <span class="st">"always"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Less than high school   Less than 5th grade    High school or GED 
+                 2055                  1142                  1480 
+More than high school                  &lt;NA&gt; 
+                 3185                  1392 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb134"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb134-1"><a href="#cb134-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Note: setting a reference automatically makes the reference the first level</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="save-dataset-for-the-future" class="level2">
+<h2 class="anchored" data-anchor-id="save-dataset-for-the-future">Save dataset for the future</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb135"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb135-1"><a href="#cb135-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reorder the variable names for next time</span></span>
+<span id="cb135-2"><a href="#cb135-2" aria-hidden="true" tabindex="-1"></a>nhanes_col <span class="ot">&lt;-</span>  <span class="fu">c</span>(<span class="st">"SEQN"</span>, <span class="st">"RIASEX"</span>, <span class="st">"sex"</span>, <span class="st">"RIDAGEYR"</span>, <span class="st">"age_groups"</span>, <span class="st">"RIDRETH1"</span>, <span class="st">"race_eth"</span>,  <span class="st">"INDFMPIR"</span>, <span class="st">"DMDEDUC3"</span>, <span class="st">"DMDEDUC2"</span>, <span class="st">"education_youth"</span>, <span class="st">"education_adult"</span>, <span class="st">"education"</span>, <span class="st">"SDMVSTRA"</span>, <span class="st">"SDMVPSU"</span>, <span class="st">"LBXRBCSI"</span>, <span class="st">"LBXWBCSI"</span>, <span class="st">"LBDLYMNO"</span>, <span class="st">"LBDNENO"</span>, <span class="st">"nlr"</span>, <span class="st">"LBXIRN"</span>, <span class="st">"iron_status"</span>, <span class="st">"URXUAS"</span>, <span class="st">"LBXBCD"</span>, <span class="st">"LBXBPB"</span>, <span class="st">"LBXCOT"</span>)</span>
+<span id="cb135-3"><a href="#cb135-3" aria-hidden="true" tabindex="-1"></a>nhanes <span class="ot">&lt;-</span> <span class="fu">relocate</span>(nhanes, <span class="fu">all_of</span>(nhanes_col))</span>
+<span id="cb135-4"><a href="#cb135-4" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(nhanes)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   SEQN RIASEX    sex RIDAGEYR age_groups RIDRETH1           race_eth INDFMPIR
+1 93703      2 Female        2     [0,16]        5         Other Race     5.00
+2 93704      1   Male        2     [0,16]        3 Non-Hispanic White     5.00
+3 93705      2 Female       66    (64,80]        4 Non-Hispanic Black     0.82
+4 93706      1   Male       18    (16,32]        5         Other Race       NA
+5 93707      1   Male       13     [0,16]        5         Other Race     1.88
+6 93708      2 Female       66    (64,80]        5         Other Race     1.63
+  DMDEDUC3 DMDEDUC2       education_youth       education_adult
+1       NA       NA                  &lt;NA&gt;                  &lt;NA&gt;
+2       NA       NA                  &lt;NA&gt;                  &lt;NA&gt;
+3       NA        2                  &lt;NA&gt; Less than high school
+4       15       NA More than high school                  &lt;NA&gt;
+5        6       NA Less than high school                  &lt;NA&gt;
+6       NA        1                  &lt;NA&gt; Less than high school
+              education SDMVSTRA SDMVPSU LBXRBCSI LBXWBCSI LBDLYMNO LBDNENO
+1                  &lt;NA&gt;      145       2       NA       NA       NA      NA
+2                  &lt;NA&gt;      143       1     4.25      7.4      3.5     3.2
+3 Less than high school      145       2     5.48      8.6      3.4     4.2
+4 More than high school      134       2     5.24      6.1      1.5     3.7
+5 Less than high school      138       1     5.02     11.2      4.2     6.1
+6 Less than high school      138       2     4.59      6.0      1.9     3.6
+        nlr LBXIRN iron_status URXUAS LBXBCD LBXBPB LBXCOT cut_groups
+1        NA     NA        &lt;NA&gt;     NA     NA     NA     NA      [0,8]
+2 0.9142857     NA        &lt;NA&gt;     NA   0.07     NA     NA      [0,8]
+3 1.2352941     92      Normal     NA   0.24   2.98  0.028    (62,80]
+4 2.4666667    164      Normal     NA   0.21   0.74  0.138     (8,20]
+5 1.4523810     91      Normal   5.09   0.14   0.39  0.555     (8,20]
+6 1.8947368     90      Normal  24.07   0.73   1.53  0.011    (62,80]</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb137"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb137-1"><a href="#cb137-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Save dataset as a csv file</span></span>
+<span id="cb137-2"><a href="#cb137-2" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(nhanes, <span class="at">file =</span> <span class="fu">here</span>(<span class="st">"nhanes_class_dataset.csv"</span>))</span>
+<span id="cb137-3"><a href="#cb137-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Save dataset as an R object</span></span>
+<span id="cb137-4"><a href="#cb137-4" aria-hidden="true" tabindex="-1"></a><span class="fu">save</span>(nhanes, <span class="at">file =</span> <span class="fu">here</span>(<span class="st">"nhanes_class_dataset.rda"</span>))</span>
+<span id="cb137-5"><a href="#cb137-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb137-6"><a href="#cb137-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Import dataset back into R from the csv or R object</span></span>
+<span id="cb137-7"><a href="#cb137-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Only R object keeps the preset factor variables saved</span></span>
+<span id="cb137-8"><a href="#cb137-8" aria-hidden="true" tabindex="-1"></a>nhanes_csv <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="fu">here</span>((<span class="st">"nhanes_class_dataset.csv"</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Rows: 9254 Columns: 27
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr  (8): sex, age_groups, race_eth, education_youth, education_adult, educa...
+dbl (19): SEQN, RIASEX, RIDAGEYR, RIDRETH1, INDFMPIR, DMDEDUC3, DMDEDUC2, SD...
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb139"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb139-1"><a href="#cb139-1" aria-hidden="true" tabindex="-1"></a><span class="fu">load</span>(<span class="fu">here</span>((<span class="st">"nhanes_class_dataset.rda"</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="remember-to-save-your-r-script" class="level2">
+<h2 class="anchored" data-anchor-id="remember-to-save-your-r-script">Remember to save your R script!</h2>
+</section>
+<section id="to-exit-r" class="level2">
+<h2 class="anchored" data-anchor-id="to-exit-r">To exit R</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb140"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb140-1"><a href="#cb140-1" aria-hidden="true" tabindex="-1"></a><span class="co"># q()</span></span>
+<span id="cb140-2"><a href="#cb140-2" aria-hidden="true" tabindex="-1"></a><span class="do">## if you close R, you will be asked to save your workspace image</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="click-render-to-run-all-of-your-code-and-generate-a-report" class="level2">
+<h2 class="anchored" data-anchor-id="click-render-to-run-all-of-your-code-and-generate-a-report">Click <strong>Render</strong> to run all of your code and generate a report</h2>
+</section>
 </section>
 
 </main>

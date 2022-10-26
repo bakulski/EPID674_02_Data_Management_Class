@@ -3,7 +3,7 @@ title: "EPID674 Epidemiologic Data Analysis using R"
 subtitle: "Wrangling and Exploring Data with R"
 author: "Kelly Bakulski, Lauren Middleton"
 date: "Last compiled on `r format(Sys.Date(), '%B %d, %Y')`"
-format: html
+format: docx
 editor: source
 ---
 
@@ -75,7 +75,7 @@ here() # Orient yourself to the default file path format on your computer
 ```{r}
 #| label: load_demographics_data
 
-# Download NHANES demographics data and remove the labels
+# Download NHANES demographics data
 demog <- nhanes("DEMO_J")
 # Check the column names (variable names)
 colnames(demog)
