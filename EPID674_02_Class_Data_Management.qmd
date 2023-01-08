@@ -43,6 +43,7 @@ library(tidyverse)
 library(here)
 library(nhanesA)
 library(sjlabelled)
+library(readxl)
 ```
 
 ## Specify file directories
@@ -56,7 +57,17 @@ here() # Orient yourself to the default file path format on your computer
 #"/cloud/project" 
 ```
 
-## Data cleaning plan:
+## Practice importing an excel dataset
+```{r}
+#| label: import_excel
+
+flu_data <- read_excel(path = here("flu_testing_example_data.xlsx"))
+  
+```
+
+
+
+## Overall data cleaning plan:
 1) Load demographics, complete blood counts, and chemical datasets
 2) Check datasets
 3) Keep only the useful variables
