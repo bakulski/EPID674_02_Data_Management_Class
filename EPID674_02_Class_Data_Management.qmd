@@ -3,7 +3,7 @@ title: "EPID674 Epidemiologic Data Analysis using R"
 subtitle: "Wrangling and Exploring Data with R"
 author: "Kelly Bakulski, Lauren Middleton"
 date: "Last compiled on `r format(Sys.Date(), '%B %d, %Y')`"
-format: docx
+format: html
 editor: source
 ---
 
@@ -110,13 +110,17 @@ colnames(demog)
 
 # Explore the data set
 str(demog) # Get detailed information about each variable and the object overall
+
 dim(demog) # What are the dimensions?
+
 colnames(demog) # What are the column names?
+
 rownames(demog)[1:20] # What are the row names?
 
-
 head(demog) # What do the first 6 rows look like?
+
 demog[1:10, ] # What do the first 10 rows look like?
+
 ```
 
 
@@ -126,9 +130,13 @@ demog[1:10, ] # What do the first 10 rows look like?
 #| label: explore_variables
 
 # Explore the variables, starting with RIDAGEYR
+
 length(demog$RIDAGEYR) # How many observations are in this variable?
+
 str(demog$RIDAGEYR) # What type of object is the variable?
+
 demog$RIDAGEYR[1:10] # Are there any duplicates in the first few values?
+
 ```
 
 # Check your understanding!
@@ -169,7 +177,7 @@ colnames(cotinine)
 ## Select columns of datasets to keep only variables that we will use in the class
 
 ```{r}
-#| label: select
+#| label: select_demographics_columns
 
 # select() is a useful tidyverse function that keeps columns in a dataframe
 # We only want to keep the necessary variables to avoid creating a huge dataset
@@ -193,6 +201,12 @@ demog_select <- demog %>%
 dim(demog_select)
 #9254    9 - number of rows does not change
 
+```
+
+
+```{r}
+#| label: select_columns_additional
+
 ############ Complete blood count dataset ############
 dim(cbc)
 #8366   22
@@ -203,7 +217,7 @@ cbc_select <- cbc %>%
          LBDLYMNO,
          LBDNENO)
 dim(cbc_select)
-#8366    2
+#8366    5
 
 ############ Iron dataset ############
 dim(fe)
@@ -247,12 +261,21 @@ dim(cotinine_select)
 ## One dataset at a time, join all datasets with the demographics dataset
 
 ```{r}
-#| label: join_datasets
+#| label: join_first_two_datasets
+
+# Double check that the participant IDs from the second dataset are in the first dataset
+table(cbc_select$SEQN %in% demog_select$SEQN)
 
 # Merge the demographics and complete blood count datasets
 demog_cbc <- full_join(demog_select, cbc_select, by = "SEQN")
 # Check the merge - How many participants and variables do you expect?
 str(demog_cbc)
+
+```
+
+
+```{r}
+#| label: join_remaining_datasets
 
 # Merge the previous dataset and iron dataset
 demog_cbc_fe <- full_join(demog_cbc, fe_select, by = "SEQN")
@@ -280,6 +303,7 @@ str(nhanes)
 # This is our joined dataset!
 ```
 
+
 ## Create a new continuous variable from other continuous variables
 
 ```{r create_continuous_variables}
@@ -297,6 +321,7 @@ nhanes %>%
          LBDLYMNO,
          nlr) %>%
   head()
+
 ```
 
 
@@ -304,6 +329,8 @@ nhanes %>%
 
 ```{r create_categorical_variables}
 #| label: create_categorial_variables
+
+# Normal blood iron levels range from 60 to 170 ug/dL (https://www.mountsinai.org/health-library/tests/serum-iron-test). Make a 3 category variable for low, normal, and high iron levels
 
  # How many participants do you expect in each of the iron status groups?
 sum(nhanes$LBXIRN < 60, na.rm = TRUE)
@@ -494,6 +521,7 @@ save(nhanes, file = here("nhanes_class_dataset.rda"))
 # Only R object keeps the preset factor variables saved
 nhanes_csv <- read_csv(here(("nhanes_class_dataset.csv")))
 load(here(("nhanes_class_dataset.rda")), verbose = TRUE)
+
 ```
 
 

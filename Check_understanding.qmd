@@ -1,0 +1,21 @@
+---
+title: "Untitled"
+format: html
+editor: visual
+---
+
+# Check your understanding!
+
+Serum cotinine is a continuous variable in our dataset. Let's use it to create a two-level categorical variable for nonsmoking versus smoking. Nonsmoking status can be defined as serum cotinine values less than or equal to 10 ng/mL (Pirkle et al., 1996). 
+* Make a new R code chunk
+* Make a new factor variable for smoking status
+* The variable should have the level "smoking" for cotinine greater than 10
+* The variable should have the level "nonsmoking" for cotinine less than or equal to 10
+* How many observations are in the nonsmoking category? In the smoking category?
+
+```{r}
+nhanes_smk <- nhanes_dataset %>%
+  mutate(smoking = case_when(LBXCOT <= 10 ~ "nonsmoking",
+                              LBXCOT > 10 ~ "smoking"))
+table(nhanes_smk$smoking)
+```
