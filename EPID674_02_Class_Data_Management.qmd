@@ -28,6 +28,7 @@ install.packages("tidyverse")
 install.packages("here")
 install.packages("nhanesA")
 install.packages("sjlabelled")
+install.packages("readxl")
 
 # To actually install the packages on your personal computer: change option in with the hashpipe #| operator to eval: true
 ```
@@ -62,9 +63,14 @@ here() # Orient yourself to the default file path format on your computer
 #| label: import_excel
 
 flu_data <- read_excel(path = here("flu_testing_example_data.xlsx"))
-  
+
+flu_data
+
 ```
 
+# Check your understanding!
+
+Your colleagues want to access the flu data as a comma separated value (.csv) file. Write the flu data as a .csv file to our cloud/project/files folder. 
 
 
 ## Overall data cleaning plan:
@@ -244,22 +250,22 @@ dim(cotinine_select)
 #| label: join_datasets
 
 # Merge the demographics and complete blood count datasets
-demog_cbc <- left_join(demog_select, cbc_select, by = "SEQN")
+demog_cbc <- full_join(demog_select, cbc_select, by = "SEQN")
 # Check the merge - How many participants and variables do you expect?
 str(demog_cbc)
 
 # Merge the previous dataset and iron dataset
-demog_cbc_fe <- left_join(demog_cbc, fe_select, by = "SEQN")
+demog_cbc_fe <- full_join(demog_cbc, fe_select, by = "SEQN")
 # Check the merge - How many participants and variables do you expect?
 str(demog_cbc_fe)
 
 # Merge the previous dataset and arsenic dataset
-demog_cbc_fe_as <- left_join(demog_cbc_fe, as_select, by = "SEQN")
+demog_cbc_fe_as <- full_join(demog_cbc_fe, as_select, by = "SEQN")
 # Check the merge - How many participants and variables do you expect?
 str(demog_cbc_fe_as)
 
 # Merge the previous dataset and cadmium/lead dataset
-demog_cbc_fe_as_cdpb <- left_join(demog_cbc_fe_as, cd_pb_select, by = "SEQN")
+demog_cbc_fe_as_cdpb <- full_join(demog_cbc_fe_as, cd_pb_select, by = "SEQN")
 # Check the merge - How many participants and variables do you expect?
 str(demog_cbc_fe_as_cdpb)
 
@@ -267,7 +273,7 @@ str(demog_cbc_fe_as_cdpb)
 # Note, the variable label for SEQN in the cotinine dataset from NHANES has a different capitalization pattern, so R recognizes this as a different variable from the SEQN variable in all of the other datasets. Let's strip the label from that variable and then do the merge.
 demog_cbc_fe_as_cdpb <- remove_label(demog_cbc_fe_as_cdpb, SEQN)
 cotinine_select <- remove_label(cotinine_select, SEQN)
-nhanes <- left_join(demog_cbc_fe_as_cdpb, cotinine_select, by = "SEQN")
+nhanes <- full_join(demog_cbc_fe_as_cdpb, cotinine_select, by = "SEQN")
 # Check the merge - How many participants and variables do you expect?
 str(nhanes)
 
@@ -282,7 +288,7 @@ str(nhanes)
 # Create a neutrophil:lymphocyte ratio variable (NLR)
 nhanes <- nhanes %>%
   mutate(nlr = LBDNENO / LBDLYMNO) 
-
+set_label(nhanes$nlr) <- "Neutrophil/lymphocyte ratio"
 
 # View the new variable to look at the changes
 nhanes %>%
@@ -368,6 +374,7 @@ nhanes <- nhanes %>%
   mutate(sex = factor(sex))   %>%         #change the character variables into factor variables
   mutate(sex = relevel(sex,               #set the reference levels
                        ref = "Male"))
+set_label(nhanes$sex) <- "Sex"
 
 # Check the count and data type of the new variable
 table(nhanes$sex)
@@ -390,6 +397,7 @@ nhanes <- nhanes %>%
   mutate(race_eth = factor(race_eth)) %>% #change the character variables into factor variables
   mutate(race_eth = relevel(race_eth, #set the reference levels
                             ref = "Non-Hispanic White")) 
+set_label(nhanes$race_eth) <- "Race/Ethnicity"
 
 # Check the count and data type of the new variable
 table(nhanes$race_eth)
@@ -485,7 +493,7 @@ save(nhanes, file = here("nhanes_class_dataset.rda"))
 # Import dataset back into R from the csv or R object
 # Only R object keeps the preset factor variables saved
 nhanes_csv <- read_csv(here(("nhanes_class_dataset.csv")))
-load(here(("nhanes_class_dataset.rda")))
+load(here(("nhanes_class_dataset.rda")), verbose = TRUE)
 ```
 
 
